@@ -36,7 +36,7 @@ def servedata(host, type='REQ'):
 
 def getTof(data):
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
-    return ret[265000:300000]
+    return ret[262000:290000]
 
 
 _tofplot = pg.plot(title='ToF')
