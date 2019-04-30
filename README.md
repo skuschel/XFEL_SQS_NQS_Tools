@@ -1,5 +1,7 @@
 
-# README
+# XFEL
+
+## Contributors: M. Ware, S. Kuschel, ....
 
 This repository contains a collection of functions and tools for live analysis.
 
