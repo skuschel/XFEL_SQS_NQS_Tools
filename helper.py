@@ -2,7 +2,7 @@
 This module provides helper functions and classes to be used in the live programs.
 
 
-Stephan Kuschel, 2019
+Stephan Kuschel, Matt Ware, Catherine Saladrigas, 2019
 '''
 
 import numpy as np
@@ -18,6 +18,11 @@ class RollingAverage():
         self.n = 0  # data processed
 
     def _initarray(self, data):
+        '''
+        Initializes matrix of data for rolling average operation
+        input:
+            data for generation of rolling average
+        '''
         s = np.asarray(data).shape
         self.data = np.zeros(tuple((self.length, *s)))
 
