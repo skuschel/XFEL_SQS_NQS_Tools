@@ -4,6 +4,7 @@
 
 import numpy as np
 import pyqtgraph as pg
+import helper
 
 
 
@@ -23,10 +24,20 @@ def plottof(data):
     pg.QtGui.QApplication.processEvents()
 
 
+_tofplotavg = pg.plot(title='ToF avg')
+tofavg = helper.RollingAverage(50)
+def plottofavg(data):
+    d = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    tofavg(d)
+    _tofplotavg.plot(tofavg.average, clear=True)
+    pg.QtGui.QApplication.processEvents()
+
+
 
 def main(source):
     for data, meta in servedata(source):
         plottof(data)
+        plottofavg(data)
 
 
 
