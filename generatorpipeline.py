@@ -20,8 +20,6 @@ def pipeline(f):
     return ret
 
 
-
-import functools
 def pipeline_parallel(max_workers=4):
     '''
     Decorator Factory. The returned decorator distributes the work among `max_workers` many
@@ -57,3 +55,4 @@ def pipeline_parallel(max_workers=4):
                     return
         return ret
     return decorator
+

@@ -43,7 +43,6 @@ def _getTof(streamdata):
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
 
-
 _tofplot = pg.plot(title='ToF')
 def plottof(d):
     '''
@@ -75,7 +74,6 @@ def plottofavg(d):
     	pg.QtGui.QApplication.processEvents()
 
 
-
 def main(source):
     '''
     Iterate over the datastream served by source
@@ -91,8 +89,6 @@ def main(source):
 
 		# Update TOF running average using current shot
         plottofavg(tof)
-
-
 
 
 if __name__=='__main__':
