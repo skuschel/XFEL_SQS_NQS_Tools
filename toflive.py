@@ -5,6 +5,7 @@
 import numpy as np
 import pyqtgraph as pg
 import helper
+import generatorpipeline as gp
 
 
 def filterbywhatever(ds, thres=5):
@@ -32,24 +33,25 @@ def servedata(host, type='REQ'):
     # Return the newest event in the datastream using an iterator construct
     for ret in c:
     	yield ret
-    
-    
-def getTof(data):
+
+
+@gp.pipeline
+def getTof(streamdata):
+    data, meta = streamdata
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
     return ret[262000:290000]
 
 
 _tofplot = pg.plot(title='ToF')
-def plottof(data):
+def plottof(d):
     '''
     Plots current time of flight data from one shot.
     Updates _tofplot window
     Input:
-        dictionary of data values from stream
+        tof data
     Output:
         None, updates plot window
     '''
-    d = getTof(data)
     #print(d.shape)
     _tofplot.plot(d, clear=True)
     pg.QtGui.QApplication.processEvents()
@@ -57,15 +59,14 @@ def plottof(data):
 
 _tofplotavg = pg.plot(title='ToF avg')
 tofavg = helper.RollingAverage(500)
-def plottofavg(data):
+def plottofavg(d):
     '''
     Plots rolling average of TOF
     Input:
-        dictionary of data values from stream
+        tof data
     Output:
         None, updates plot window
     '''
-    d = getTof(data)
     tofavg(d)
     if tofavg.n % 10 == 0:
     	_tofplotavg.plot(np.asarray(tofavg), clear=True)
@@ -82,12 +83,12 @@ def main(source):
         none, updates plots
     '''
 
-    for data, meta in servedata(source):
+    for tof in getTof(servedata(source)):
 		# Update TOF from current shot
-        plottof(data)
+        plottof(tof)
 
 		# Update TOF running average using current shot
-        plottofavg(data)
+        plottofavg(tof)
 
 
 
