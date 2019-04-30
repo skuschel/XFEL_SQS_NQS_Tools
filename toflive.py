@@ -7,12 +7,21 @@ import pyqtgraph as pg
 import helper
 
 
+def filterbywhatever(ds, thres=5):
+    '''
+    Place holder for outlier rejection
+    '''
+    for d in ds:
+        if whatever(d) < thres:
+            yield d
+
 
 def servedata(host, type='REQ'):
     from karabo_bridge import Client
     c = Client(host, type)
     for ret in c:
     	yield ret
+    
 
 
 
