@@ -33,7 +33,7 @@ def servedata(host, type='REQ'):
     for ret in c:
     	yield ret
     
-
+    
 def getTof(data):
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
     return ret[262000:290000]
@@ -56,7 +56,7 @@ def plottof(data):
 
 
 _tofplotavg = pg.plot(title='ToF avg')
-tofavg = helper.RollingAverage(50)
+tofavg = helper.RollingAverage(500)
 def plottofavg(data):
     '''
     Plots rolling average of TOF
@@ -96,8 +96,10 @@ if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser()
 
-    # Default IP is for live data
+    # Default IP is for locally hosted data
     default='tcp://127.0.0.1:9898'
+
+    ipdict = {'live': 'tcp://10.253.0.142:6666'}
 
     # Define how to parse command line input
     parser.add_argument('source', 
@@ -109,8 +111,12 @@ if __name__=='__main__':
     # Parse arguments from command line
     args = parser.parse_args()
 
-    # Start main function using args.soruce
-    main(args.source)
+    # find the source
+    source = args.source
+    if source in ipdict:
+        source = ipdict[source]
+    # Start main function
+    main(source)
 
 
 
