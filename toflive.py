@@ -34,7 +34,16 @@ def main(source):
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('source', type=str, help='the source of the data stream',
-            default='tcp://127.0.0.1:9898', nargs='?')
+    default='tcp://127.0.0.1:9898'
+    parser.add_argument('source', type=str, help='the source of the data stream. Default is "{}"'.format(default),
+            default=default, nargs='?')
     args = parser.parse_args()
     main(args.source)
+
+
+
+
+
+
+
+
