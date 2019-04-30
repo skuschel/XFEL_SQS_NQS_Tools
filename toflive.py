@@ -38,8 +38,9 @@ tofavg = helper.RollingAverage(50)
 def plottofavg(data):
     d = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
     tofavg(d)
-    _tofplotavg.plot(np.asarray(tofavg), clear=True)
-    pg.QtGui.QApplication.processEvents()
+    if tofavg.n % 10 == 0:
+    	_tofplotavg.plot(np.asarray(tofavg), clear=True)
+    	pg.QtGui.QApplication.processEvents()
 
 
 
