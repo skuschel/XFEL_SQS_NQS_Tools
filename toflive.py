@@ -35,11 +35,13 @@ def servedata(host, type='REQ'):
     	yield ret
 
 
-@gp.pipeline
-def getTof(streamdata):
+#@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
+def _getTof(streamdata):
     data, meta = streamdata
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
     return ret[262000:290000]
+getTof = gp.pipeline_parallel(1)(_getTof)  # this works
+
 
 
 _tofplot = pg.plot(title='ToF')
