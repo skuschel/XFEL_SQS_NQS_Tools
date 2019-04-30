@@ -21,6 +21,9 @@ class RollingAverage():
         s = np.asarray(data).shape
         self.data = np.zeros(tuple((self.length, *s)))
 
+    def __array__(self, dtype=None):
+        return np.asanyarray(self.average, dtype=dtype)  
+
     def __call__(self, data):
         '''
         add data to the rolling average
