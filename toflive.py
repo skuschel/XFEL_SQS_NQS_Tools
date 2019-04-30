@@ -34,6 +34,11 @@ def servedata(host, type='REQ'):
     	yield ret
     
 
+def getTof(data):
+    ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    return ret[265000:300000]
+
+
 _tofplot = pg.plot(title='ToF')
 def plottof(data):
     '''
@@ -44,7 +49,7 @@ def plottof(data):
     Output:
         None, updates plot window
     '''
-    d = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    d = getTof(data)
     #print(d.shape)
     _tofplot.plot(d, clear=True)
     pg.QtGui.QApplication.processEvents()
@@ -60,7 +65,7 @@ def plottofavg(data):
     Output:
         None, updates plot window
     '''
-    d = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    d = getTof(data)
     tofavg(d)
     if tofavg.n % 10 == 0:
     	_tofplotavg.plot(np.asarray(tofavg), clear=True)
