@@ -38,6 +38,7 @@ _pghistplot = pg.plot(title='HistBrightness {}'.format(xfel.__version__))
 _pgbrightestimg = pg.image(title='Brightest Shots {}'.format(xfel.__version__))
 imagehist = xfel.DataBuffer(50)
 brightnesshist = xfel.DataBuffer(1000)
+_brightlastidx = -1
 def plotbrightest(d):
     '''
     Plots current time of flight data from one shot.
@@ -49,12 +50,16 @@ def plotbrightest(d):
     '''
     imagehist(d)
     brightnesshist(np.mean(d))
+
     _pghistplot.plot(brightnesshist.data, clear=True) 
     _pgimage2.setImage(d-imagehist.average, autoRange=False)
     idx = np.argmax(brightnesshist[:50])
-    print(idx)
-    _pgbrightestimg.setImage(imagehist[idx])
-    print(np.mean(imagehist[idx]))
+    global _brightlastidx  # This line REALLY hurts :/
+    if idx != _brightlastidx:
+        _pgbrightestimg.setImage(imagehist[idx])
+        #print('update')
+        _brightlastidx = idx
+    #print(np.mean(imagehist[idx]))
     pg.QtGui.QApplication.processEvents()
 
 
