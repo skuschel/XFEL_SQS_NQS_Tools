@@ -17,7 +17,7 @@ def filterbywhatever(ds, thres=5):
 
 
 
-_tofplot = pg.plot(title='ToF')
+#_tofplot = pg.plot(title='ToF')
 def plottof(d):
     '''
     Plots current time of flight data from one shot.
@@ -32,11 +32,11 @@ def plottof(d):
     pg.QtGui.QApplication.processEvents()
 
 
-_tofplotavg = pg.plot(title='ToF avg')
-tofavg = xfel.RollingAverage(100)
+_tofplotavg = pg.plot(title='ToF avg {}'.format(xfel.__version__))
+tofavg = xfel.RollingAverage(50)
 highqavg = xfel.RollingAverage(1000)
 lowqavg = xfel.RollingAverage(1000)
-_tofplotint = pg.plot(title='ToF Integrals (mean)')
+_tofplotint = pg.plot(title='ToF Integrals (mean) {}'.format(xfel.__version__))
 def plottofavg(d):
     '''
     Plots rolling average of TOF
@@ -47,11 +47,12 @@ def plottofavg(d):
     '''
     d = d.flatten()
     tofavg(d)
-    if tofavg.n % 10 == 0:
-        _tofplotavg.plot(np.asarray(tofavg), clear=True)
-        _tofplotint.plot(np.asarray(highqavg.data), clear=True)
-        _tofplotint.plot(np.asarray(lowqavg.data))
+    if tofavg.n % 1 == 0:
+        _tofplotavg.plot(d, pen='r', clear=True, name='last')
+        _tofplotavg.plot(np.asarray(tofavg), pen='w', name='avg')
+        _tofplotavg.addLegend()
         pg.QtGui.QApplication.processEvents()
+
 
 def plotintegral(d):
     # Ausgeschnitten ist [262000:290000]
@@ -65,7 +66,7 @@ def plotintegral(d):
 
 
 
-def main(source):
+def main(source, tofbg=None):
     '''
     Iterate over the datastream served by source
     Input:
@@ -73,14 +74,18 @@ def main(source):
     Output:
         none, updates plots
     '''
+    if tofbg is None:
+        tofbg = 0
+    else:
+        tofbg = np.load(tofbg)['arr_0']
 
     for tof in xfel.getTof(xfel.servedata(source)):
 		# Update TOF from current shot
-        plottof(tof)
-
+        #plottof(tof)
+        trace = tof-tofbg
 		# Update TOF running average using current shot
-        plottofavg(tof)
-        plotintegral(tof)
+        plottofavg(trace)
+        plotintegral(trace)
 
 
 if __name__=='__main__':
@@ -94,20 +99,23 @@ if __name__=='__main__':
 
     # Define how to parse command line input
     parser.add_argument('source', 
-						type=str, 
-						help='the source of the data stream. Default is "{}"'.format(default),
-           				default=default, 
-						nargs='?')
+                        type=str, 
+                        help='the source of the data stream. Default is "{}"'.format(default),
+                        default=default,
+                        nargs='?')
+    parser.add_argument('--tofbg', type=str, default=None)
 
     # Parse arguments from command line
     args = parser.parse_args()
+
+    print(args.tofbg)
 
     # find the source
     source = args.source
     if source in ipdict:
         source = ipdict[source]
     # Start main function
-    main(source)
+    main(source, tofbg=args.tofbg)
 
 
 
