@@ -4,8 +4,7 @@
 
 import numpy as np
 import pyqtgraph as pg
-import helper
-import generatorpipeline as gp
+import xfelmay2019 as xfel
 
 
 def filterbywhatever(ds, thres=5):
@@ -16,31 +15,6 @@ def filterbywhatever(ds, thres=5):
         if whatever(d) < thres:
             yield d
 
-
-def servedata(host, type='REQ'):
-    '''
-    Generator for the online data stream.
-    Input: 
-        host: ip address of data stream
-        type: ???
-    Output:
-        dictionary of values for current event
-    '''
-    from karabo_bridge import Client
-    # Generate a client to serve the data
-    c = Client(host, type)
-
-    # Return the newest event in the datastream using an iterator construct
-    for ret in c:
-    	yield ret
-
-
-#@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(streamdata):
-    data, meta = streamdata
-    ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
-    return ret[262000:290000]
-getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
 
 _tofplot = pg.plot(title='ToF')
@@ -59,7 +33,7 @@ def plottof(d):
 
 
 _tofplotavg = pg.plot(title='ToF avg')
-tofavg = helper.RollingAverage(500)
+tofavg = xfel.RollingAverage(500)
 def plottofavg(d):
     '''
     Plots rolling average of TOF
@@ -83,7 +57,7 @@ def main(source):
         none, updates plots
     '''
 
-    for tof in getTof(servedata(source)):
+    for tof in xfel.getTof(xfel.servedata(source)):
 		# Update TOF from current shot
         plottof(tof)
 

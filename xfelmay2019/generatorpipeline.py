@@ -1,5 +1,7 @@
 '''
-Pipeline tools when using generators for pipelines in python
+This module contains function to turn worker functions (working on a single dataset) into functions acepting an iterable and beeing a generator in itself. This way it becomes easy to act on multiple elements and dont have to care how the iteration over the elements works. This makes it possible to parallize worker functions over the elements (=shots) automatically by just changing the decorator.
+
+Todo: A filter decorator to drop shots.
 
 Stephan Kuschel, 2019
 '''
@@ -20,38 +22,39 @@ def pipeline(f):
     return ret
 
 
-def pipeline_parallel(max_workers=4):
+def pipeline_parallel(workers=4):
     '''
-    Decorator Factory. The returned decorator distributes the work among `max_workers` many
-    workers. Falls back to the `pipeline` decorator if `max_workers==1`
+    Decorator Factory. The returned decorator distributes the work among `workers` many
+    workers. Falls back to the `pipeline` decorator if `workers==1`
 
     The work is distributed and collected in a round-robin fashin. Thus the
     order of elements is preserved.
     '''
-    if max_workers == 1:
+    if workers == 1:
         return pipeline
     def decorator(f):
         @functools.wraps(f)
         def ret(gen):
-            from concurrent.futures import ProcessPoolExecutor
-            pool = ProcessPoolExecutor(max_workers=max_workers)
+            from multiprocessing import Pool
+            pool = Pool(workers)
             readidx = 0
             writeidx = 0
-            clen = max_workers + 1
+            clen = workers + 1
             cache = [None] * clen
             for el in gen:
-                cache[writeidx] = pool.submit(f, el)
+                cache[writeidx] = pool.apply_async(f, (el,))
                 writeidx = (writeidx + 1) % clen
                 if writeidx != readidx:
                     # fill cache
                     continue
-                yield cache[readidx].result()
+                yield cache[readidx].get()
                 readidx = (readidx + 1) % clen
             # flush cache
             while True:
-                yield cache[readidx].result()
+                yield cache[readidx].get()
                 readidx = (readidx + 1) % clen
                 if readidx == writeidx:
+                    pool.shutdown()
                     return
         return ret
     return decorator
