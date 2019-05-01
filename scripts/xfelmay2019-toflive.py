@@ -32,11 +32,11 @@ def plottof(d):
     pg.QtGui.QApplication.processEvents()
 
 
-_tofplotavg = pg.plot(title='ToF avg')
+_tofplotavg = pg.plot(title='ToF avg {}'.format(xfel.__version__))
 tofavg = xfel.RollingAverage(100)
 highqavg = xfel.RollingAverage(1000)
 lowqavg = xfel.RollingAverage(1000)
-_tofplotint = pg.plot(title='ToF Integrals (mean)')
+_tofplotint = pg.plot(title='ToF Integrals (mean) {}'.format(xfel.__version__))
 def plottofavg(d):
     '''
     Plots rolling average of TOF
