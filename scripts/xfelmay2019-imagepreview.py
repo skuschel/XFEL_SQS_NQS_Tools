@@ -1,13 +1,34 @@
 #!/usr/bin/env python3
 
-# Matthew Ware 2019
+# Stephan Kuschel, Matt Ware, Catherine Saladrigas, 2019
 
-# Import required libraries
 import numpy as np
 import pyqtgraph as pg
 import xfelmay2019 as xfel
 
 
+@xfel.filter
+def filterbywhatever(ds, thres=5):
+    '''
+    Place holder for outlier rejection
+    '''
+    if whatever(d) < thres:
+        return True
+
+
+
+_pgimage = pg.image()
+def plotimage(d):
+    '''
+    Plots current time of flight data from one shot.
+    Updates _tofplot window
+    Input:
+        image data
+    Output:
+        None, updates plot window
+    '''
+    _pgimage.setImage(d, autoRange=False)
+    pg.QtGui.QApplication.processEvents()
 
 
 
@@ -20,10 +41,10 @@ def main(source):
     Output:
         none, updates plots
     '''
-    ds = xfel.servedata(source))
-    ds = xfel.baselinedTOF(ds)
-    for tof in ds:
-        pass
+    ds = xfel.servedata(source)
+    ds = xfel.getImage(ds)
+    for image in ds:
+        plotimage(image)
 
 
 if __name__=='__main__':
@@ -51,6 +72,11 @@ if __name__=='__main__':
         source = ipdict[source]
     # Start main function
     main(source)
+
+
+
+
+
 
 
 

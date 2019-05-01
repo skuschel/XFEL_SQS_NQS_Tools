@@ -42,7 +42,6 @@ def _getTof(streamdata):
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
 
-
 @gp.pipeline
 def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-2000 ):
     '''
@@ -64,5 +63,19 @@ def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-200
     # Substract mean of remaining TOF trace and take absolute value
     newtof_mean = np.mean( newtof[baselineFrom:] )
     return newtof - newtof_mean
+
+
+# --- Image stuff ---
+
+@gp.pipeline
+def getImage(streamdata):
+    data, meta = streamdata
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.pixels']
+    return ret 
+
+
+
+
+
 
 
