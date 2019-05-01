@@ -28,14 +28,14 @@ def plottof(d):
         None, updates plot window
     '''
     #print(d.shape)
-    _tofplot.plot(d, clear=True)
+    _tofplot.plot(d.flatten(), clear=True)
     pg.QtGui.QApplication.processEvents()
 
 
 _tofplotavg = pg.plot(title='ToF avg')
-tofavg = xfel.RollingAverage(50)
-highqavg = xfel.RollingAverage(100)
-lowqavg = xfel.RollingAverage(100)
+tofavg = xfel.RollingAverage(100)
+highqavg = xfel.RollingAverage(1000)
+lowqavg = xfel.RollingAverage(1000)
 _tofplotint = pg.plot(title='ToF Integrals (mean)')
 def plottofavg(d):
     '''
@@ -45,6 +45,7 @@ def plottofavg(d):
     Output:
         None, updates plot window
     '''
+    d = d.flatten()
     tofavg(d)
     if tofavg.n % 10 == 0:
         _tofplotavg.plot(np.asarray(tofavg), clear=True)
