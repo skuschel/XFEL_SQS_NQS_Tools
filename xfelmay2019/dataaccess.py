@@ -6,6 +6,7 @@ Second part of the file contains access functions to the data within a stream wi
 Stephan Kuschel, 2019
 '''
 from . import generatorpipeline as gp
+import numpy as np
 
 
 # ---- Access the data on disk or network ----
@@ -39,3 +40,29 @@ def _getTof(streamdata):
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
     return ret[262000:290000]
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
+
+
+
+@gp.pipeline
+def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-2000 ):
+    '''
+    input:
+        streamdata
+        downsampleRange: (int,int) tuple giving range over which to downsmaple TOF
+        baselineFrom: gives start index for calculating baseline average
+    output:
+        normalizedTOFTrace: puts tof trace in standard form for analysis
+    Matthew Ware, 2019
+    '''
+    data, meta = streamdata
+    toftrace = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    # Reduce dimension of TOF to span desired range
+    newtof = toftrace[downsampleRange[0]:downsampleRange[1]]
+    N = newtof.size
+    x = np.arange(N)
+
+    # Substract mean of remaining TOF trace and take absolute value
+    newtof_mean = np.mean( newtof[baselineFrom:] )
+    return newtof - newtof_mean
+
+
