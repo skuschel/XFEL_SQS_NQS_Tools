@@ -33,7 +33,10 @@ def plottof(d):
 
 
 _tofplotavg = pg.plot(title='ToF avg')
-tofavg = xfel.RollingAverage(500)
+tofavg = xfel.RollingAverage(50)
+highqavg = xfel.RollingAverage(100)
+lowqavg = xfel.RollingAverage(100)
+_tofplotint = pg.plot(title='ToF Integrals (mean)')
 def plottofavg(d):
     '''
     Plots rolling average of TOF
@@ -44,8 +47,19 @@ def plottofavg(d):
     '''
     tofavg(d)
     if tofavg.n % 10 == 0:
-    	_tofplotavg.plot(np.asarray(tofavg), clear=True)
-    	pg.QtGui.QApplication.processEvents()
+        _tofplotavg.plot(np.asarray(tofavg), clear=True)
+        _tofplotint.plot(np.asarray(highqavg.data), clear=True)
+        _tofplotint.plot(np.asarray(lowqavg.data))
+        pg.QtGui.QApplication.processEvents()
+
+def plotintegral(d):
+    highq, lowq = np.mean(d[6000:9000]), np.mean(d[16000:18000])
+    highqavg(highq)
+    lowqavg(lowq)
+    _tofplotint.plot(np.asarray(highqavg.data), clear=True)
+    _tofplotint.plot(np.asarray(lowqavg.data))
+    pg.QtGui.QApplication.processEvents()
+
 
 
 def main(source):
@@ -63,6 +77,7 @@ def main(source):
 
 		# Update TOF running average using current shot
         plottofavg(tof)
+        plotintegral(tof)
 
 
 if __name__=='__main__':
