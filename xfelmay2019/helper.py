@@ -63,7 +63,7 @@ class DataBuffer():
         endidx = -1 if self.n > self.i else self.i
         data = self.buffer[0:endidx]
         start = 0 if self.i == self.n else self.i-self.length
-        return np.roll(data, -self.i)
+        return np.roll(data, -self.i, axis=0)
 
     @property
     def average(self):

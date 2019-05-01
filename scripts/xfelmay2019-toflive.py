@@ -74,18 +74,16 @@ def main(source, tofbg=None):
     Output:
         none, updates plots
     '''
-    if tofbg is None:
-        tofbg = 0
-    else:
-        tofbg = np.load(tofbg)['arr_0']
+    if tofbg is not None:
+        print('tofbg "{}" loaded...'.format(tofbg))
+        tofbg = np.load(tofbg)['arr_0'][262000:290000]
+        print('tofbg average is {}'.format(np.mean(tofbg)))
 
     for tof in xfel.getTof(xfel.servedata(source)):
-		# Update TOF from current shot
-        #plottof(tof)
-        trace = tof-tofbg
-		# Update TOF running average using current shot
-        plottofavg(trace)
-        plotintegral(trace)
+        if tofbg is not None:
+            tof = tof - tofbg
+        plottofavg(tof)
+        plotintegral(tof)
 
 
 if __name__=='__main__':
@@ -108,7 +106,7 @@ if __name__=='__main__':
     # Parse arguments from command line
     args = parser.parse_args()
 
-    print(args.tofbg)
+
 
     # find the source
     source = args.source
