@@ -35,6 +35,7 @@ def plotimage(d):
 
 _pgimage2 = pg.image(title='AverageImage {}'.format(xfel.__version__))
 _pghistplot = pg.plot(title='HistBrightness {}'.format(xfel.__version__))
+_pgbrightestimg = pg.image(title='Brightest Shots {}'.format(xfel.__version__))
 imagehist = xfel.DataBuffer(50)
 brightnesshist = xfel.DataBuffer(1000)
 def plotbrightest(d):
@@ -50,6 +51,10 @@ def plotbrightest(d):
     brightnesshist(np.mean(d))
     _pghistplot.plot(brightnesshist.data, clear=True) 
     _pgimage2.setImage(d-imagehist.average, autoRange=False)
+    idx = np.argmax(brightnesshist[:50])
+    print(idx)
+    _pgbrightestimg.setImage(imagehist[idx])
+    print(np.mean(imagehist[idx]))
     pg.QtGui.QApplication.processEvents()
 
 
