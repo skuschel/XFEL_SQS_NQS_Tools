@@ -6,7 +6,8 @@ see https://github.com/skuschel/XFELMay2019
 '''
 
 from .helper import *
-from . import generatorpipeline 
+from .generatorpipeline import *
+from .dataaccess import *
 
 
 from ._version import get_versions
