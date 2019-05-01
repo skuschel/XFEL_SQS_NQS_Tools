@@ -7,13 +7,13 @@ import pyqtgraph as pg
 import xfelmay2019 as xfel
 
 
+@xfel.filter
 def filterbywhatever(ds, thres=5):
     '''
     Place holder for outlier rejection
     '''
-    for d in ds:
-        if whatever(d) < thres:
-            yield d
+    if whatever(d) < thres:
+        return True
 
 
 

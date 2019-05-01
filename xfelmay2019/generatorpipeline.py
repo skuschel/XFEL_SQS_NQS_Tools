@@ -21,6 +21,16 @@ def pipeline(f):
             yield f(el)
     return ret
 
+def filter(f):
+    '''
+    A function return True or False will be turned into a filter by this generator.
+    '''
+    @functools.wraps(f)
+    def ret(gen):
+        for el in gen:
+            if bool(f(el)):
+                yield el
+
 
 def pipeline_parallel(workers=4):
     '''
