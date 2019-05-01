@@ -1,5 +1,7 @@
 '''
-Pipeline tools when using generators for pipelines in python
+This module contains function to turn worker functions (working on a single dataset) into functions acepting an iterable and beeing a generator in itself. This way it becomes easy to act on multiple elements and dont have to care how the iteration over the elements works. This makes it possible to parallize worker functions over the elements (=shots) automatically by just changing the decorator.
+
+Todo: A filter decorator to drop shots.
 
 Stephan Kuschel, 2019
 '''

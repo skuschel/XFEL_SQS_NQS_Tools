@@ -8,6 +8,7 @@ see https://github.com/skuschel/XFELMay2019
 from .helper import *
 from .generatorpipeline import *
 from .dataaccess import *
+from . import analysis
 
 
 from ._version import get_versions

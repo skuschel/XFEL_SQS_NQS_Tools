@@ -1,5 +1,9 @@
 '''
-module providing functions for data access.
+module providing functions for data access. This should extent to files beeing automatically served or hdf5's accessed.
+
+Second part of the file contains access functions to the data within a stream without altering the data. Analysis functions, which are returning data, that was not directly saved within the stream should go into `analysis.py`. Complicated analysis which requires multiple functions, just add another python file to this repository.
+
+Stephan Kuschel, 2019
 '''
 from . import generatorpipeline as gp
 
