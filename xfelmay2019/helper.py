@@ -41,7 +41,9 @@ class DataBuffer():
         self.n += 1
 
     def __getitem__(self, idx):
-        return _buffer[idx]
+        if self._buffer is None:
+            raise ValueError('Buffer contains no data')
+        return self._buffer[idx]
 
     def __len__(self):
         return self.i if self.i < self.length else self.length
@@ -52,7 +54,7 @@ class DataBuffer():
         return the usable data from the buffer
         '''
         endidx = -1 if self.n > self.i else self.i
-        data = self._buffer[0:endidx]
+        data = self[0:endidx]
         start = 0 if self.i == self.n else self.i-self.length
         return np.roll(data, -self.i)
 

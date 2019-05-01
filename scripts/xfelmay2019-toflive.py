@@ -17,7 +17,7 @@ def filterbywhatever(ds, thres=5):
 
 
 
-_tofplot = pg.plot(title='ToF')
+#_tofplot = pg.plot(title='ToF')
 def plottof(d):
     '''
     Plots current time of flight data from one shot.
@@ -47,11 +47,12 @@ def plottofavg(d):
     '''
     d = d.flatten()
     tofavg(d)
-    if tofavg.n % 10 == 0:
-        _tofplotavg.plot(np.asarray(tofavg), clear=True)
-        _tofplotint.plot(np.asarray(highqavg.data), clear=True)
-        _tofplotint.plot(np.asarray(lowqavg.data))
+    if tofavg.n % 1 == 0:
+        _tofplotavg.plot(d, pen='r', clear=True, name='last')
+        _tofplotavg.plot(np.asarray(tofavg), pen='w', name='avg')
+        _tofplotavg.addLegend()
         pg.QtGui.QApplication.processEvents()
+
 
 def plotintegral(d):
     # Ausgeschnitten ist [262000:290000]
@@ -76,7 +77,7 @@ def main(source):
 
     for tof in xfel.getTof(xfel.servedata(source)):
 		# Update TOF from current shot
-        plottof(tof)
+        #plottof(tof)
 
 		# Update TOF running average using current shot
         plottofavg(tof)
