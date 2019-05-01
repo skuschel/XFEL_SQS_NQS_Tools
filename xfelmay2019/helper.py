@@ -31,7 +31,7 @@ class DataBuffer():
 
     def __call__(self, data):
         '''
-        add data to the rolling average
+        add data to the buffer
         '''
         if self._buffer is None:
             self._initarray(data)
@@ -40,21 +40,28 @@ class DataBuffer():
         self.i = (self.i + 1) % self.length
         self.n += 1
 
-    def __getitem__(self, idx):
+    @property
+    def buffer(self):
         if self._buffer is None:
             raise ValueError('Buffer contains no data')
-        return self._buffer[idx]
+        return self._buffer
+
+    def __getitem__(self, idx):
+        return self.data[idx]
 
     def __len__(self):
         return self.i if self.i < self.length else self.length
 
+    def __iter__(self):
+        return (d for d in self.data)
+
     @property
     def data(self):
         '''
-        return the usable data from the buffer
+        return the usable data from the buffer, sorted from old to new
         '''
         endidx = -1 if self.n > self.i else self.i
-        data = self[0:endidx]
+        data = self.buffer[0:endidx]
         start = 0 if self.i == self.n else self.i-self.length
         return np.roll(data, -self.i)
 
@@ -66,15 +73,19 @@ class DataBuffer():
         ret = np.mean(self.data, axis=0)
         return ret
         
+    def normby(self, norm=np.sum):
+        return [norm(el) for el in self]
 
-    @property
-    def max(self):
+    def max(self, norm=np.sum):
         '''
-        returns the max in the buffer
+        returns the max in the buffer.
+        reduce = np.sum:
+            function which reduces each element in the buffer to a single scalar
+            used to find the max.
         '''
-        assert False
-        ret = np.mean(self.data, axis=0)
-        return ret
+        normvals = normby(norm)
+        idx = np.argmax(norm)
+        return self[idx]
 
 
 

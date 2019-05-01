@@ -17,7 +17,7 @@ def filterbywhatever(ds, thres=5):
 
 
 
-_pgimage = pg.image()
+#_pgimage = pg.image(title='Current Image {}'.format(xfel.__version__))
 def plotimage(d):
     '''
     Plots current time of flight data from one shot.
@@ -33,6 +33,27 @@ def plotimage(d):
 
 
 
+_pgimage2 = pg.image(title='AverageImage {}'.format(xfel.__version__))
+_pghistplot = pg.plot(title='HistBrightness {}'.format(xfel.__version__))
+imagehist = xfel.DataBuffer(50)
+brightnesshist = xfel.DataBuffer(1000)
+def plotbrightest(d):
+    '''
+    Plots current time of flight data from one shot.
+    Updates _tofplot window
+    Input:
+        image data
+    Output:
+        None, updates plot window
+    '''
+    imagehist(d)
+    brightnesshist(np.mean(d))
+    _pghistplot.plot(brightnesshist.data, clear=True) 
+    _pgimage2.setImage(d-imagehist.average, autoRange=False)
+    pg.QtGui.QApplication.processEvents()
+
+
+
 def main(source):
     '''
     Iterate over the datastream served by source
@@ -44,7 +65,8 @@ def main(source):
     ds = xfel.servedata(source)
     ds = xfel.getImage(ds)
     for image in ds:
-        plotimage(image)
+        #plotimage(image)
+        plotbrightest(image)
 
 
 if __name__=='__main__':
