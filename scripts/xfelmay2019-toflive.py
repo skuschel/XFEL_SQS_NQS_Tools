@@ -53,11 +53,13 @@ def plottofavg(d):
         pg.QtGui.QApplication.processEvents()
 
 def plotintegral(d):
+    # Ausgeschnitten ist [262000:290000]
     highq, lowq = np.mean(d[6000:9000]), np.mean(d[16000:18000])
     highqavg(highq)
     lowqavg(lowq)
-    _tofplotint.plot(np.asarray(highqavg.data), clear=True)
-    _tofplotint.plot(np.asarray(lowqavg.data))
+    _tofplotint.plot(np.asarray(highqavg.data), clear=True, name='highq', pen='r')
+    _tofplotint.plot(np.asarray(lowqavg.data), name='lowq', pen='g')
+    _tofplotint.addLegend()
     pg.QtGui.QApplication.processEvents()
 
 
