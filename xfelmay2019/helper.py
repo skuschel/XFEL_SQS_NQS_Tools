@@ -9,7 +9,7 @@ import numpy as np
 
 
 
-class RollingAverage():
+class DataBuffer():
 
     def __init__(self, length=10):
         self.length = length
@@ -27,7 +27,7 @@ class RollingAverage():
         self._buffer = np.zeros(tuple((self.length, *s)))
 
     def __array__(self, dtype=None):
-        return np.asanyarray(self.average, dtype=dtype)  
+        return np.asanyarray(self.data, dtype=dtype)  
 
     def __call__(self, data):
         '''
@@ -76,9 +76,9 @@ class RollingAverage():
 
 
 
-
-
-
+class RollingAverage(DataBuffer):
+    def __array__(self, dtype=None):
+        return np.asanyarray(self.average, dtype=dtype)
 
 
 
