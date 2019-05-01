@@ -14,3 +14,5 @@ from . import analysis
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
+
+print('Welcome to xfelmay2019 version {}'.format(__version__))
