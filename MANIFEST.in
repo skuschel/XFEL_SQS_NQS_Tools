@@ -1,0 +1,2 @@
+include versioneer.py
+include xfelmay2019/_version.py
