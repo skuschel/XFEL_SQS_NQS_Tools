@@ -53,7 +53,8 @@ class RollingAverage():
         '''
         endidx = -1 if self.n > self.i else self.i
         data = self._buffer[0:endidx]
-        return data
+        start = 0 if self.i == self.n else self.i-self.length
+        return np.roll(data, -self.i)
 
     @property
     def average(self):
