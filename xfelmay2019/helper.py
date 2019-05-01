@@ -13,7 +13,7 @@ class RollingAverage():
 
     def __init__(self, length=10):
         self.length = length
-        self.data = None
+        self._buffer = None
         self.i = 0  # next
         self.n = 0  # data processed
 
@@ -24,7 +24,7 @@ class RollingAverage():
             data for generation of rolling average
         '''
         s = np.asarray(data).shape
-        self.data = np.zeros(tuple((self.length, *s)))
+        self._buffer = np.zeros(tuple((self.length, *s)))
 
     def __array__(self, dtype=None):
         return np.asanyarray(self.average, dtype=dtype)  
@@ -33,26 +33,45 @@ class RollingAverage():
         '''
         add data to the rolling average
         '''
-        if self.data is None:
+        if self._buffer is None:
             self._initarray(data)
         data = np.asarray(data)
-        self.data[self.i] = data
+        self._buffer[self.i] = data
         self.i = (self.i + 1) % self.length
         self.n += 1
+
+    def __getitem__(self, idx):
+        return _buffer[idx]
+
+    def __len__(self):
+        return self.i if self.i < self.length else self.length
+
+    @property
+    def data(self):
+        '''
+        return the usable data from the buffer
+        '''
+        endidx = -1 if self.n > self.i else self.i
+        data = self._buffer[0:endidx]
+        return data
 
     @property
     def average(self):
         '''
-        returns the actural average
+        returns the average of all buffered data.
         '''
-        endidx = -1 if self.n > self.i else self.i
-        data = self.data[0:endidx]
-        ret = np.mean(data, axis=0)
+        ret = np.mean(self.data, axis=0)
         return ret
         
 
-
-
+    @property
+    def max(self):
+        '''
+        returns the max in the buffer
+        '''
+        assert False
+        ret = np.mean(self.data, axis=0)
+        return ret
 
 
 
