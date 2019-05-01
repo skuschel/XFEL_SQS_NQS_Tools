@@ -95,7 +95,33 @@ class RollingAverage(DataBuffer):
 
 
 
+class Accumulator():
+    def __init__(self):
+        '''
+        An Accumulator for n-dimensional data.
+        '''
+        self._buffer = None
+        self.n = 0
 
+    def __call__(self, data):
+        if self._buffer is None:
+            self._buffer = np.array(data)  # a real copy. May be read-only otherwise
+        else:
+            self._buffer += data
+        self.n += 1
+
+    def __len__(self):
+        return self.n
+
+    @property
+    def buffer(self):
+        if self._buffer is None:
+            raise ValueError('Buffer contains no data')
+        return self._buffer
+
+    @property
+    def mean(self):
+        return self.buffer / self.n
 
 
 
