@@ -71,7 +71,8 @@ def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-200
 def getImage(streamdata):
     data, meta = streamdata
     ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-    return ret 
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    return dict(image=ret, tid=tid)
 
 
 
@@ -85,4 +86,6 @@ def tid(streamdata):
     '''
     data, meta = streamdata
     ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
-    return ret 
+    return ret
+
+
