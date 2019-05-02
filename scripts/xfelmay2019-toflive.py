@@ -33,9 +33,9 @@ def plottof(d):
 
 
 _tofplotavg = pg.plot(title='ToF avg {}'.format(xfel.__version__))
-tofavg = xfel.RollingAverage(50)
-highqavg = xfel.RollingAverage(1000)
-lowqavg = xfel.RollingAverage(1000)
+tofavg = xfel.RollingAverage(40)
+highqavg = xfel.RollingAverage(600)
+lowqavg = xfel.RollingAverage(600)
 _tofplotint = pg.plot(title='ToF Integrals (mean) {}'.format(xfel.__version__))
 def plottofavg(d):
     '''
