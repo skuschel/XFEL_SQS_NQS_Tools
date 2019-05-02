@@ -70,12 +70,19 @@ def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-200
 @gp.pipeline
 def getImage(streamdata):
     data, meta = streamdata
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.pixels']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
     return ret 
 
 
 
 
+# --- scalar values: motor positions.... ---
 
-
-
+@gp.pipeline
+def tid(streamdata):
+    '''
+    train id
+    '''
+    data, meta = streamdata
+    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    return ret 
