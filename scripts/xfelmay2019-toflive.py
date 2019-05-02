@@ -33,7 +33,7 @@ def plottof(d):
 
 
 _tofplotavg = pg.plot(title='ToF avg {}'.format(xfel.__version__))
-tofavg = xfel.RollingAverage(40)
+tofavg = xfel.RollingAverage(30)
 highqavg = xfel.RollingAverage(600)
 lowqavg = xfel.RollingAverage(600)
 _tofplotint = pg.plot(title='ToF Integrals (mean) {}'.format(xfel.__version__))
@@ -59,8 +59,8 @@ def plotintegral(d):
     highq, lowq = np.mean(d[6000:9000]), np.mean(d[16000:18000])
     highqavg(highq)
     lowqavg(lowq)
-    _tofplotint.plot(np.asarray(highqavg.data), clear=True, name='highq', pen='r')
-    _tofplotint.plot(np.asarray(lowqavg.data), name='lowq', pen='g')
+    _tofplotint.plot(np.asarray(highqavg.data), clear=True, name='highq (6000:9000)', pen='r')
+    _tofplotint.plot(np.asarray(lowqavg.data), name='lowq (16000:18000)', pen='g')
     _tofplotint.addLegend()
     pg.QtGui.QApplication.processEvents()
 
@@ -79,11 +79,15 @@ def main(source, tofbg=None):
         tofbg = np.load(tofbg)['arr_0'][262000:290000]
         print('tofbg average is {}'.format(np.mean(tofbg)))
 
-    for tof in xfel.getTof(xfel.servedata(source)):
+    for i, tof in enumerate(xfel.getTof(xfel.servedata(source))):
         if tofbg is not None:
             tof = tof - tofbg
         plottofavg(tof)
         plotintegral(tof)
+        if i%100 == 0:
+            print('running gc...')
+            import gc
+            gc.collect()
 
 
 if __name__=='__main__':
