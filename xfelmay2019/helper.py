@@ -60,7 +60,7 @@ class DataBuffer():
         '''
         return the usable data from the buffer, sorted from old to new
         '''
-        endidx = -1 if self.n > self.i else self.i
+        endidx = None if self.n > self.i else self.i
         data = self.buffer[0:endidx]
         start = 0 if self.i == self.n else self.i-self.length
         return np.roll(data, -self.i, axis=0)
