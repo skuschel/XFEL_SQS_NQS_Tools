@@ -25,9 +25,13 @@ def findTOFPeaks( toftrace ):
     Watthew Ware, 2019
     '''
     toftrace = np.abs(toftrace)
-    base_width = 200.
+
     # Find indexes of inds
-    zf = find_peaks_cwt(toftrace, [base_width, base_width/2., base_width/4.])
+#    base_width = 200.
+#    zf = find_peaks_cwt(toftrace, [base_width, base_width/2., base_width/4.])
+
+    base_width = 100.
+    zf = find_peaks_cwt(toftrace, [base_width])
     
     # Create averaging zones around peaks
     zguess = np.zeros_like(zf).astype(float) # allocate space
@@ -40,6 +44,6 @@ def findTOFPeaks( toftrace ):
         if xhigh > toftrace.size:
             xhigh = toftrace.size
             
-        zguess[ii] = np.max(toftrace[xlow:xhigh])
+        zguess[ii] = np.mean(toftrace[xlow:xhigh])
         
     return zf, zguess
