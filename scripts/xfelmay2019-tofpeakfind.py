@@ -8,8 +8,31 @@ import pyqtgraph as pg
 import xfelmay2019 as xfel
 
 
+navg = 10
+nbins=1000
+tofavg = xfel.RollingAverage(navg)
+tofhist = xfel.RollingAverage(10)
+_tofplotpeak = pg.plot(title='ToF Peak Histogram')
+centers = None
+def plottofhist(tof):
+    tof = tof.flatten()
+    tofavg(tof)
+    currAvg = np.asarray(tofavg)
+    _tofplotpeak.plot(np.abs(currAvg) /np.abs(currAvg).max(), pen='r', clear=True, name='Avg')
 
+    if tofavg.n % navg == 0:
+        zf, zguess = xfel.findTOFPeaks( currAvg )
+        hist, edges = np.histogram( zf, bins=nbins, range=(0, currAvg.size), weights=zguess )       
+        centers = edges[1:] - (edges[1]-edges[0])/2. 
 
+        tofhist(hist)
+        
+    
+    if tofavg.n >= navg:
+        centers = np.linspace( 0, currAvg.size, nbins )
+        _tofplotpeak.plot(centers, np.asarray(tofhist)/np.asarray(tofhist).max(), pen='w', name='Peak positions histogram')
+    
+    pg.QtGui.QApplication.processEvents()
 
 
 def main(source):
@@ -20,10 +43,11 @@ def main(source):
     Output:
         none, updates plots
     '''
-    ds = xfel.servedata(source))
+    ds = xfel.servedata(source)
     ds = xfel.baselinedTOF(ds)
-    for tof in ds:
-        pass
+    for idx,tof in enumerate(ds):
+        plottofhist(tof)
+
 
 
 if __name__=='__main__':

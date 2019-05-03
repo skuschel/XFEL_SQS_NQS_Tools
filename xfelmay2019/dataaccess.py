@@ -41,9 +41,15 @@ def _getTof(streamdata):
     return ret[262000:290000]
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
+def _getPulseEnergy(streamdata):
+    data, meta = streamdata
+    ret = data['SA3_XTD10_XGM/XGM/DOOCS']['pulseEnergy.crossUsed.value']
+    return ret
+getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
+
 
 @gp.pipeline
-def baselinedTOF(streamdata, downsampleRange=(262000,290000) , baselineFrom=-2000 ):
+def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-2000 ):
     '''
     input:
         streamdata
