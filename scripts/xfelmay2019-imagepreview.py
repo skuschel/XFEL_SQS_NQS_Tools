@@ -36,10 +36,12 @@ def plotimage(d):
 _pgimage2 = pg.image(title='AverageImage {}'.format(xfel.__version__))
 _pghistplot = pg.plot(title='HistBrightness {}'.format(xfel.__version__))
 _pgbrightestimg = pg.image(title='Brightest Shots {}'.format(xfel.__version__))
-imagehist = xfel.DataBuffer(50)
+brightestlen = 15
+imagehist = xfel.DataBuffer(brightestlen)
+tidhist = xfel.DataBuffer(brightestlen)
 brightnesshist = xfel.DataBuffer(1000)
-_brightlastidx = -1
-def plotbrightest(d):
+_brightlasttid = -1
+def plotbrightest(d, tid=None):
     '''
     Plots current time of flight data from one shot.
     Updates _tofplot window
@@ -50,15 +52,17 @@ def plotbrightest(d):
     '''
     imagehist(d)
     brightnesshist(np.mean(d))
+    tidhist(tid)
 
     _pghistplot.plot(brightnesshist.data, clear=True) 
     _pgimage2.setImage(d-imagehist.average, autoRange=False)
-    idx = np.argmax(brightnesshist[:50])
-    global _brightlastidx  # This line REALLY hurts :/
-    if idx != _brightlastidx:
+    idx = np.argmax(brightnesshist[-brightestlen:])
+    global _brightlasttid  # This line REALLY hurts :/
+    if tidhist[-brightestlen:][idx] != _brightlasttid:
+        print('new brightest shot: {:9} -> {:9}'.format(_brightlasttid, tid))
         _pgbrightestimg.setImage(imagehist[idx])
         #print('update')
-        _brightlastidx = idx
+        _brightlasttid = tidhist[-brightestlen:][idx]
     #print(np.mean(imagehist[idx]))
     pg.QtGui.QApplication.processEvents()
 
@@ -74,9 +78,9 @@ def main(source):
     '''
     ds = xfel.servedata(source)
     ds = xfel.getImage(ds)
-    for image in ds:
+    for data in ds:
         #plotimage(image)
-        plotbrightest(image)
+        plotbrightest(data['image'], tid=data['tid'])
 
 
 if __name__=='__main__':
