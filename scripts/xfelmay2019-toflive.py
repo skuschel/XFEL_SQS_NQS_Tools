@@ -34,8 +34,6 @@ def plottof(d):
 
 _tofplotavg = pg.plot(title='ToF avg {}'.format(xfel.__version__))
 tofavg = xfel.RollingAverage(30)
-highqavg = xfel.RollingAverage(600)
-lowqavg = xfel.RollingAverage(600)
 _tofplotint = pg.plot(title='ToF Integrals (mean) {}'.format(xfel.__version__))
 def plottofavg(d):
     '''
@@ -54,13 +52,18 @@ def plottofavg(d):
         pg.QtGui.QApplication.processEvents()
 
 
+roihists = [xfel.RollingAverage(600) for _ in range(3)]
 def plotintegral(d):
     # Ausgeschnitten ist [262000:290000]
-    highq, lowq = np.mean(d[6000:9000]), np.mean(d[16000:18000])
-    highqavg(highq)
-    lowqavg(lowq)
-    _tofplotint.plot(np.asarray(highqavg.data), clear=True, name='highq (6000:9000)', pen='r')
-    _tofplotint.plot(np.asarray(lowqavg.data), name='lowq (16000:18000)', pen='g')
+    rois = [slice(6000,9000), slice(17000,19000), slice(3940, 3980)]
+    colors = ['r', 'g', 'b']
+    names = ['highq', 'lowq', 'light']
+    clear = True
+    for roi, c, name, hist in zip(rois, colors, names, roihists):
+        n = '{name} ({a}:{b})'.format(name=name, a=roi.start, b=roi.stop)
+        hist(np.mean(d[roi]))  # add to history
+        _tofplotint.plot(hist.data, clear=clear, name=n, pen=c)
+        clear = False
     _tofplotint.addLegend()
     pg.QtGui.QApplication.processEvents()
 
