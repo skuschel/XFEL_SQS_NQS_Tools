@@ -38,7 +38,7 @@ def servedata(host, type='REQ'):
 def _getTof(streamdata):
     data, meta = streamdata
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
-    return ret[262000:290000]
+    return np.array(ret[262000:290000])
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
 def _getPulseEnergy(streamdata):
