@@ -371,6 +371,8 @@ def findTOFPeaks( toftrace ):
     return zf, zguess
 
 
+def tofROI( pixels, tofs, roi=(269000 - 200, 276000) ):
+    return np.sum(np.array(avgtofs)[:,(highCharge[0]<pixels)&(pixels<highCharge[1])],1)
 
 
 

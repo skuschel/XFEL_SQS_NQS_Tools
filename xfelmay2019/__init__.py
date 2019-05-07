@@ -9,6 +9,7 @@ from .helper import *
 from .generatorpipeline import *
 from .dataaccess import *
 from .tof import *
+from .offlineAccess import *
 from .clustersize import *
 from . import analysis
 

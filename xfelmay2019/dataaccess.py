@@ -114,4 +114,3 @@ def tid(streamdata):
     ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
     return ret
 
-
