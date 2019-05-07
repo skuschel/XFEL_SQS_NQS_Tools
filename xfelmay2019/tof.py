@@ -108,7 +108,7 @@ def averageBrightestTOFs( pixels, tofs, integrateAt=(280000 - 1000,280000 + 1500
     return np.mean(subtofs[ratio > maxRatio*.8,:], 0)
     
       
-def waterfallTOFs( pixels, tofs, labels=None):  
+def waterfallTOFs( pixels, tofs, labels=None, figsize=(10,5)):  
     '''
     Plots all TOFs of a given run in a waterfall plot
         inputs 
@@ -117,7 +117,7 @@ def waterfallTOFs( pixels, tofs, labels=None):
         outputs
             waterfall plot, sans labels unless otherwise specified
     '''
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=figsize)
     offset = 0.
     if labels is None:
         for tof in tofs:
@@ -269,6 +269,28 @@ def waterfallBrightest_labelByTrainId( pixels, tofs, trainIds, nbright=100,
         offset += np.min( tof[behlkeAt<pixels] )
         
     return subtrains[inds]
+
+def getAvgRunsTOF( runRange, path, tofrange ):
+    NR = runRange.size
+
+    tofs=[]
+    for ir,arun in enumerate(runRange):
+        pixels, tof, tids = xfel.getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = xfel.averageTOF(tof)
+        tofs.append(avgtof)
+        
+    return tofs
+
+def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,280000 + 1500), behlkeAt=268000):
+    NR = runRange.size
+
+    tofs=[]
+    for ir,arun in enumerate(runRange):
+        pixels, tof, tids = xfel.getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = xfel.averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
+        tofs.append(avgtof)
+        
+    return tofs
 
 
 ################ OLD TOF FUNCS #############33
