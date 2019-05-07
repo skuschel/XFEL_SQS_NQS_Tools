@@ -9,7 +9,6 @@ import xfelmay2019 as xfel
 _daqaliveplot = pg.image(title='DAQ alive: Green good, red bad')
 CLRS = ['r','g']
 cmap = pg.ColorMap(np.array([0.,1.]), np.array([pg.colorTuple(pg.Color(c)) for c in CLRS ]) )
-print(cmap)
 _daqaliveplot.setColorMap( cmap )
 def plotdaqalive(status):
     '''
@@ -20,7 +19,6 @@ def plotdaqalive(status):
         None, updates plot window
     '''
     im = np.ones((3,3))*float(status)
-    print(float(status))
     _daqaliveplot.setImage( im, autoLevels=False )
     pg.QtGui.QApplication.processEvents()
 

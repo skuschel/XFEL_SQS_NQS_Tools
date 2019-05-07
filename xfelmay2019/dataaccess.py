@@ -89,7 +89,6 @@ def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-200
 
 def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'):
     data, meta = streamdata
-    print(spec0,spec1)
     ret = data[spec0][spec1]
     return ret
 
