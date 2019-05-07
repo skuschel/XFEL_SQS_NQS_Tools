@@ -108,7 +108,7 @@ def averageBrightestTOFs( pixels, tofs, integrateAt=(280000 - 1000,280000 + 1500
     return np.mean(subtofs[ratio > maxRatio*.8,:], 0)
     
       
-def waterfallTOFs( pixels, tofs, labels=None):  
+def waterfallTOFs( pixels, tofs, labels=None, figsize=(10,5), waterfallDelta=None):  
     '''
     Plots all TOFs of a given run in a waterfall plot
         inputs 
@@ -117,19 +117,25 @@ def waterfallTOFs( pixels, tofs, labels=None):
         outputs
             waterfall plot, sans labels unless otherwise specified
     '''
-    plt.figure(figsize=(10,5))
+    plt.figure(figsize=figsize)
     offset = 0.
     if labels is None:
         for tof in tofs:
             plt.plot( pixels , tof + offset )
-            offset += np.min( tof )
+            if waterfallDelta is None:
+                offset += np.min( tof )
+            else:
+                offset += waterfallDelta
     else:
         startTextX = pixels[-1] - 2e3
         for tof, label in zip(tofs,labels):
             plt.plot( pixels , tof + offset, label=label )
             baseline = tof[0]+offset + 40        
             plt.annotate(label, (startTextX, baseline))
-            offset += np.min( tof )  
+            if waterfallDelta is None:
+                offset += np.min( tof )
+            else:
+                offset += waterfallDelta
         
         
 def overlayTOFs( pixels, tofs, labels=None):  
@@ -185,7 +191,7 @@ def getTrainIds( runNumber, path ):
             array of train IDs 
 
     '''
-    run = tofoff.runFormat( runNumber )
+    run = runFormat( runNumber )
     runData = kd.RunDirectory(path+run)
     return runData.train_ids
 
@@ -269,6 +275,28 @@ def waterfallBrightest_labelByTrainId( pixels, tofs, trainIds, nbright=100,
         offset += np.min( tof[behlkeAt<pixels] )
         
     return subtrains[inds]
+
+def getAvgRunsTOF( runRange, path, tofrange ):
+    NR = runRange.size
+
+    tofs=[]
+    for ir,arun in enumerate(runRange):
+        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = averageTOF(tof)
+        tofs.append(avgtof)
+        
+    return tofs
+
+def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,280000 + 1500), behlkeAt=268000):
+    NR = runRange.size
+
+    tofs=[]
+    for ir,arun in enumerate(runRange):
+        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
+        tofs.append(avgtof)
+        
+    return tofs
 
 
 ################ OLD TOF FUNCS #############33
