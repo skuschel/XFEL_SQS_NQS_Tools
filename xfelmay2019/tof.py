@@ -372,7 +372,7 @@ def findTOFPeaks( toftrace ):
 
 
 def tofROI( pixels, tofs, roi=(269000 - 200, 276000) ):
-    return np.sum(np.array(avgtofs)[:,(highCharge[0]<pixels)&(pixels<highCharge[1])],1)
+    return np.sum(np.array(tofs)[:,(roi[0]<pixels)&(pixels<roi[1])],1)
 
 
 
