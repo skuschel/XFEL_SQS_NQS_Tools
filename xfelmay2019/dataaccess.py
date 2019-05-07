@@ -73,11 +73,32 @@ def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-200
 
 # --- Image stuff ---
 
+#@gp.pipeline
+#def getImage(streamdata):
+#    data, meta = streamdata
+#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
+#    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+#    return dict(image=ret, tid=tid)
+
+#@gp.pipeline
+#def getImage(streamdata):
+#    data, meta = streamdata
+#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR']['data.image.data']
+#    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR']['timestamp.tid']
+#    return dict(image=ret, tid=tid)
+
+def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'):
+    data, meta = streamdata
+    print(spec0,spec1)
+    ret = data[spec0][spec1]
+    return ret
+
 @gp.pipeline
 def getImage(streamdata):
     data, meta = streamdata
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.pixels']
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['timestamp.tid']
     return dict(image=ret, tid=tid)
 
 
