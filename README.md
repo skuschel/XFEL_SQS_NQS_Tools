@@ -1,7 +1,7 @@
 
 # XFEL
 
-## Contributors: M. Ware, S. Kuschel, ....
+## Contributors: M. Ware, S. Kuschel, C. Saladrigas
 
 This repository contains a collection of functions and tools for live analysis.
 
@@ -15,15 +15,10 @@ Issue tracker and main repo: https://github.com/skuschel/XFELMay2019/issues
 
 1.5) Install by executing `./setup.py develop --user`
 
-2) Every program should be executable and displays a helptext explaining the arguments when run with `-h`. Example: `./toflive.py -h`
+2) Scripts in ./scripts should be executable and displays a helptext explaining the arguments when run with `-h`. Example: `./toflive.py -h`
 
-# Code in this repo
-## toflive.py
-Run as 
-'''bash
-python toflive.py datahost (optional)
-'''
+# Analysis notebooks
 
-Plots live images of the TOF, including running average.
+Sample jupyter notebooks are included in this repo.
 
-
+Before pushing to the repo, clear the notebooks of any output.
