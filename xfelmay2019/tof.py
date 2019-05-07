@@ -108,7 +108,7 @@ def averageBrightestTOFs( pixels, tofs, integrateAt=(280000 - 1000,280000 + 1500
     return np.mean(subtofs[ratio > maxRatio*.8,:], 0)
     
       
-def waterfallTOFs( pixels, tofs, labels=None, figsize=(10,5)):  
+def waterfallTOFs( pixels, tofs, labels=None, figsize=(10,5), waterfallDelta=None):  
     '''
     Plots all TOFs of a given run in a waterfall plot
         inputs 
@@ -122,14 +122,20 @@ def waterfallTOFs( pixels, tofs, labels=None, figsize=(10,5)):
     if labels is None:
         for tof in tofs:
             plt.plot( pixels , tof + offset )
-            offset += np.min( tof )
+            if waterfallDelta is None:
+                offset += np.min( tof )
+            else:
+                offset += waterfallDelta
     else:
         startTextX = pixels[-1] - 2e3
         for tof, label in zip(tofs,labels):
             plt.plot( pixels , tof + offset, label=label )
             baseline = tof[0]+offset + 40        
             plt.annotate(label, (startTextX, baseline))
-            offset += np.min( tof )  
+            if waterfallDelta is None:
+                offset += np.min( tof )
+            else:
+                offset += waterfallDelta
         
         
 def overlayTOFs( pixels, tofs, labels=None):  
