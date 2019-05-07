@@ -281,8 +281,8 @@ def getAvgRunsTOF( runRange, path, tofrange ):
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = xfel.getRunTOF( arun, path, tofrange=tofrange)
-        avgtof = xfel.averageTOF(tof)
+        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = averageTOF(tof)
         tofs.append(avgtof)
         
     return tofs
@@ -292,8 +292,8 @@ def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,2
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = xfel.getRunTOF( arun, path, tofrange=tofrange)
-        avgtof = xfel.averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
+        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        avgtof = averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
         tofs.append(avgtof)
         
     return tofs
