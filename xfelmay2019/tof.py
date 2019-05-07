@@ -185,7 +185,7 @@ def getTrainIds( runNumber, path ):
             array of train IDs 
 
     '''
-    run = tofoff.runFormat( runNumber )
+    run = runFormat( runNumber )
     runData = kd.RunDirectory(path+run)
     return runData.train_ids
 
