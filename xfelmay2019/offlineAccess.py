@@ -24,7 +24,11 @@ def getPulseEnergies( run , path ):
     runData = kd.RunDirectory(path+runStr)
     print('BE WARY OF THIS FUNCTION!!!! Might not return true PE depending on train settings.')
     data = runData.get_array( 'SA3_XTD10_XGM/XGM/DOOCS:output','data.intensityTD')
-    return np.asarray(data.trainId), np.asarray(data[:,120])
+    dataArray = np.asarray( data )
+    PID = np.argmin( np.abs( dataArray[0,:]-1 ) )
+    
+    
+    return np.asarray(data.trainId), np.asarray(data[:,PID-1])
 
 def getChamberHeight( run , path ):
     runStr = runFormat( run )
