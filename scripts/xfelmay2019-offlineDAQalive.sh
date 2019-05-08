@@ -11,7 +11,8 @@ while [ 1 ]; do
 	runpath="$exppath/raw/$formattedRun"
 
 	while [ ! -d $runpath ]; do
-		echo "Success"
+		echo "Waiting"
+		sleep 10
 	done
 
 	echo "Checking run $startAtRun"
@@ -26,10 +27,19 @@ while [ 1 ]; do
 
 	sleep 10
 
+	startAtRun=$((startAtRun+1))
+	waitForRun=$((startAtRun+1))
+	runGet="./runformat.py $startAtRun"
+	formattedRun=$($runGet)
+	runpath="$exppath/raw/$formattedRun"
+
+	while [ ! -d $runpath ]; do
+		echo "Waiting"
+		sleep 10
+	done
+
 	kill $jobiddaq
 	kill $jobidkb
-
-	startAtRun=$((startAtRun+1))
 done
 
 
