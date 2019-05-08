@@ -96,8 +96,8 @@ def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spe
 def getImage(streamdata):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.pixels']
-    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['timestamp.tid']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
