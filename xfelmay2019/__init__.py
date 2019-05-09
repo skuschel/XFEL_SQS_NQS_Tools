@@ -12,6 +12,7 @@ from .tof import *
 from .MCP import *
 from .offlineAccess import *
 from .clustersize import *
+from .correlationPlots import *
 from . import analysis
 
 
