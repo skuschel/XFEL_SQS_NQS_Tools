@@ -104,6 +104,18 @@ def getImage(streamdata):
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
     return dict(image=ret, tid=tid)
 
+
+# --- scalar values: motor positions.... ---
+
+@gp.pipeline
+def tid(streamdata):
+    '''
+    train id
+    '''
+    data, meta = streamdata
+    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    return ret
+
 @gp.pipeline
 def getImageandTof(streamdata):
     data, meta = streamdata
@@ -119,13 +131,3 @@ def getImageandTof(streamdata):
     return dict(image=ret, tid=tid, tof=tofcut)
 
 # --- scalar values: motor positions.... ---
-
-@gp.pipeline
-def tid(streamdata):
-    '''
-    train id
-    '''
-    data, meta = streamdata
-    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
-    return ret
-
