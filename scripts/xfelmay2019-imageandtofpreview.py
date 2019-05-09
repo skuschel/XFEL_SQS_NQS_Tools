@@ -42,16 +42,40 @@ _pgbrightestimg = win_live.addViewBox(row = 0, col = 1)
 _pgstattof = win_live.addPlot(row = 1, col = 0)
 _pgstatimg = win_live.addPlot(row = 1, col = 1)
 
+win_gallery = pg.GraphicsWindow()
+_pggaltof_0 = win_gallery.addPlot(row = 0, col = 0)
+_pggalimg_0 = win_gallery.addViewBox(row = 1, col = 0)
+_pggaltof_1 = win_gallery.addPlot(row = 0, col = 1)
+_pggalimg_1 = win_gallery.addViewBox(row = 1, col = 1)
+_pggaltof_2 = win_gallery.addPlot(row = 0, col = 2)
+_pggalimg_2 = win_gallery.addViewBox(row = 1, col = 2)
+_pggaltof_3 = win_gallery.addPlot(row = 0, col = 3)
+_pggalimg_3 = win_gallery.addViewBox(row = 1, col = 3)
 
+#fakedata = np.random.rand(100,)
+#fakeimgdata  = np.random.rand(100,100)
+#fakeimgitem0=pg.ImageItem(fakeimgdata) #, title = 'brightest image'
+#fakeimgitem1=pg.ImageItem(fakeimgdata) #, title = 'brightest image'
+#fakeimgitem2=pg.ImageItem(fakeimgdata) #, title = 'brightest image'
+#fakeimgitem3=pg.ImageItem(fakeimgdata) #, title = 'brightest image'
+#_pggalimg_0.addItem(fakeimgitem0)
+#_pggalimg_1.addItem(fakeimgitem1)
+#_pggalimg_2.addItem(fakeimgitem2)
+#_pggalimg_3.addItem(fakeimgitem3)
+#_pggaltof_0.plot(fakedata, clear=True, title = 'statistics mcp signal')
+#_pggaltof_1.plot(fakedata, clear=True, title = 'statistics mcp signal')
+#_pggaltof_2.plot(fakedata, clear=True, title = 'statistics mcp signal')
+#_pggaltof_3.plot(fakedata, clear=True, title = 'statistics mcp signal')
 
 ####_pgbrightestimg = pg.image(title='Brightest Shots {}'.format(xfel.__version__))
 brightestlen = 15
 imagehist = xfel.DataBuffer(brightestlen)
 tofhist = xfel.DataBuffer(brightestlen)
 tidhist = xfel.DataBuffer(brightestlen)
-brightnesshist = xfel.DataBuffer(1000)
-tofsignalhist = xfel.DataBuffer(1000)
+brightnesshist = xfel.DataBuffer(300)
+tofsignalhist = xfel.DataBuffer(300)
 _brightlasttid = -1
+_numbergoodshots = -1
 lastTime = time()
 def plotbrightest(d, tid=None, tof=None):
     '''
@@ -65,8 +89,9 @@ def plotbrightest(d, tid=None, tof=None):
 
     imagehist(d)
     tofhist(tof)
-    brightnesshist(np.mean(d)-np.mean(imagehist.average))
-    tofsignalhist(np.mean(tof)) # need something more elaborate here, e.g. roi sum
+    act_brightness=np.mean(d)-np.mean(imagehist.average)
+    brightnesshist(act_brightness)
+    tofsignalhist(np.mean(tof[5800:7800])) # need something more elaborate here, e.g. roi sum
     tidhist(tid)
 
     # just some timing info
@@ -84,8 +109,10 @@ def plotbrightest(d, tid=None, tof=None):
     ######_pgimage2.setImage(d-imagehist.average, autoRange=False)
     idx = np.argmax(brightnesshist[-brightestlen:])
     global _brightlasttid  # This line REALLY hurts :/
+    global _numbergoodshots  # This line REALLY hurts :/
     if tidhist[-brightestlen:][idx] != _brightlasttid:
         print('new brightest shot: {:9} -> {:9}'.format(_brightlasttid, tid))
+        
         #####_pgbrightestimg.setImage(imagehist[idx])
         #print('update')
         _brightlasttid = tidhist[-brightestlen:][idx]
@@ -94,6 +121,29 @@ def plotbrightest(d, tid=None, tof=None):
         actimgitem=pg.ImageItem(img_data) #, title = 'brightest image'
         actimgitem.setLevels([0,img_data.max()])
         _pgbrightestimg.addItem(actimgitem)
+        
+    brightness_threshold=10
+    #if act_brightness>10:
+    if act_brightness>brightness_threshold:
+        _numbergoodshots+=1
+        plot_id=np.mod(_numbergoodshots,4)
+        if plot_id == 0:
+             _pggaltof_0.plot(-tofhist[idx].reshape((tofhist[idx].size,)), clear=True)
+             galimgitem=pg.ImageItem(img_data) #, title = 'brightest image'
+             _pggalimg_0.addItem(galimgitem)
+        elif plot_id == 1:
+             _pggaltof_1.plot(-tofhist[idx].reshape((tofhist[idx].size,)), clear=True)
+             galimgitem=pg.ImageItem(img_data) #, title = 'brightest image'
+             _pggalimg_1.addItem(galimgitem)
+        elif plot_id == 2:
+             _pggaltof_2.plot(-tofhist[idx].reshape((tofhist[idx].size,)), clear=True)
+             galimgitem=pg.ImageItem(img_data) #, title = 'brightest image'
+             _pggalimg_2.addItem(galimgitem)
+        else:
+             _pggaltof_3.plot(-tofhist[idx].reshape((tofhist[idx].size,)), clear=True)
+             galimgitem=pg.ImageItem(img_data) #, title = 'brightest image'
+             _pggalimg_3.addItem(galimgitem)
+
 
     #print(np.mean(imagehist[idx]))
     pg.QtGui.QApplication.processEvents()
