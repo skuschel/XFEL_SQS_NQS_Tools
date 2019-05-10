@@ -116,3 +116,18 @@ def tid(streamdata):
     ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
     return ret
 
+@gp.pipeline
+def getImageandTof(streamdata):
+    data, meta = streamdata
+#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
+#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
+#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
+#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
+    tofraw = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    tofcut = np.array(tofraw[262000:290000])
+    return dict(image=ret, tid=tid, tof=tofcut)
+
+# --- scalar values: motor positions.... ---
