@@ -158,31 +158,41 @@ def overlayTOFs( pixels, tofs, labels=None):
         plt.legend()
 
         
-def generateFullCorrection( correction, pixels, corrAt=0 ):
+def generateFullCorrection( correction,  pixels, corrpixels ):
     maxPixel = np.max(pixels)
-    NT,NTOF = correction.shape
-    fullCorrection = np.zeros((NT,corrAt))
-    if corrAt < 1:
-        fullCorrection = None
-    fcsize = 0
-    while fcsize < maxPixel:
-        if fullCorrection is None:
-            fullCorrection = correction
-            print(fullCorrection.shape)
-            _,fcsize = fullCorrection.shape
-        else:
-            fullCorrection = np.concatenate((fullCorrection , correction), axis=1)
-            _,fcsize = fullCorrection.shape
-    return fullCorrection[:,pixels[0]:pixels[-1]+1]
+    minPixel = np.min(pixels)
+    
+    NTOF = correction.size
+    
+    fullCorrection = np.copy(correction)
+    fullCorrpixels = np.copy(corrpixels)
+    
+    fcmin = np.min(fullCorrpixels)
+    fcmax = np.max(fullCorrpixels)
+    idx = 0
+    while (fcmin >= minPixel)|(fcmax <= maxPixel):
+        
+        fullCorrpixels = np.concatenate((  corrpixels-NTOF*(idx+1.), fullCorrpixels, corrpixels+NTOF*(idx+1.)), axis=0)
+        fullCorrection = np.concatenate((correction, fullCorrection , correction), axis=0)
+        fcmin = np.min(fullCorrpixels)
+        fcmax = np.max(fullCorrpixels)
+        idx += 1
+#         print(fcmin,fcmax)
+        
+    diffpixels = np.diff( fullCorrpixels )
+    idx0 =  np.argmin(np.abs(pixels[0]-fullCorrpixels))
+    idx1 =  np.argmin(np.abs(pixels[-1]-fullCorrpixels))
+    
+    return fullCorrection[idx0:idx1+1]
 
-def correctTOF( tofs, pixels, correction, corrAt=0 ):
-    fullCorrection = generateFullCorrection( correction, pixels, corrAt )
+def correctTOF( tofs, pixels, correction, corrpixels ):
+    fullCorrection = generateFullCorrection( correction, pixels, corrpixels )
     return tofs-fullCorrection
         
 def getRunTOF( runNumber, path, tofrange=(260000,285000), 
               dirspec='SQS_DIGITIZER_UTC1/ADC/1:network', 
               elementspec='digitizers.channel_1_A.raw.samples', 
-              corrAt=0, correctionRange=(int(4e5),int(5e5)) ):
+              corrAt=0, correctionRange=(int(4e5),int(4e5+32*3e4)) ):
     '''
     gets TOF data for a given run 
         inputs 
@@ -199,10 +209,12 @@ def getRunTOF( runNumber, path, tofrange=(260000,285000),
     pixels = np.arange(tofrange[0],tofrange[1])
     
     data = runData.get_array( dirspec,elementspec )
-    correction = np.asarray(data)[ : , correctionRange[0]:correctionRange[1] ]
-    tofdata=correctTOF(np.asarray(data)[ : , tofrange[0]:tofrange[1] ], pixels, correction, corrAt)
+    correction = np.mean( np.asarray(data)[ : , correctionRange[0]:correctionRange[1] ], 0)
+    corrpixels = np.arange(correctionRange[0],correctionRange[1])
+    
+    tofdata=correctTOF(np.asarray(data)[ : , tofrange[0]:tofrange[1] ], pixels, correction, corrpixels)
     trainIds =np.asarray(data.trainId)
-    return pixels, tofdata, trainIds  
+    return pixels, tofdata, trainIds   
 
 def getTrainIds( runNumber, path ):
     '''
