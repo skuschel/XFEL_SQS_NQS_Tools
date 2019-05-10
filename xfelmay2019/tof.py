@@ -192,7 +192,7 @@ def correctTOF( tofs, pixels, correction, corrpixels ):
 def getRunTOF( runNumber, path, tofrange=(260000,285000), 
               dirspec='SQS_DIGITIZER_UTC1/ADC/1:network', 
               elementspec='digitizers.channel_1_A.raw.samples', 
-              corrAt=0, correctionRange=(int(4e5),int(4e5+32*3e4)) ):
+              correctionRange=400000,400032 ):
     '''
     gets TOF data for a given run 
         inputs 
