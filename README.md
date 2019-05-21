@@ -5,7 +5,9 @@
 
 This repository contains a collection of functions and tools for live analysis.
 
-Issue tracker and main repo: https://github.com/skuschel/XFELMay2019/issues
+This Repo Issue Tracker: https://github.com/bj-s/XFEL2019_OnlineAnalysis/issues
+
+_ original repo: Issue tracker and main repo: https://github.com/skuschel/XFELMay2019/issues _
 
 
 # How to use this repo
