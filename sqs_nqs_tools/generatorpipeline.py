@@ -16,9 +16,9 @@ def pipeline(f):
     expects a generator and is a generator in itself.
     '''
     @functools.wraps(f)
-    def ret(gen):
+    def ret(gen, **kwds):
         for el in gen:
-            yield f(el)
+            yield f(el, **kwds)
     return ret
 
 def filter(f):
@@ -44,7 +44,7 @@ def pipeline_parallel(workers=4):
         return pipeline
     def decorator(f):
         @functools.wraps(f)
-        def ret(gen):
+        def ret(gen, **kwargs):
             from multiprocessing import Pool
             pool = Pool(workers)
             readidx = 0
@@ -52,7 +52,7 @@ def pipeline_parallel(workers=4):
             clen = workers + 1
             cache = [None] * clen
             for el in gen:
-                cache[writeidx] = pool.apply_async(f, (el,))
+                cache[writeidx] = pool.apply_async(f, (el,), kwargs)
                 writeidx = (writeidx + 1) % clen
                 if writeidx != readidx:
                     # fill cache

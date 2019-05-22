@@ -82,13 +82,14 @@ def main(source, tofbg=None):
         tofbg = np.load(tofbg)['arr_0'][262000:290000]
         print('tofbg average is {}'.format(np.mean(tofbg)))
 
-    for i, tof in enumerate(xfel.getTof(xfel.servedata(source))):
+    for i, tof in enumerate(xfel.getTof(xfel.servedata(source),idx_range=[530000,560000])):
         if tofbg is not None:
             tof = tof - tofbg
         plottofavg(tof)
         plotintegral(tof)
         if i%100 == 0:
             print('running gc...')
+            print(tof.shape)
             import gc
             gc.collect()
 

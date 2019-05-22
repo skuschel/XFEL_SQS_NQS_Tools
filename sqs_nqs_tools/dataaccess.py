@@ -35,11 +35,11 @@ def servedata(host, type='REQ'):
 
 
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(streamdata):
+def _getTof(streamdata, idx_range=[262000,290000], **kwargs):
     data, meta = streamdata
     ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
-    return np.array(ret[262000:290000])
-getTof = gp.pipeline_parallel(1)(_getTof)  # this works
+    return np.array(ret[idx_range[0]:idx_range[1]])
+getTof = gp.pipeline_parallel(2)(_getTof)  # this works
 
 def _getPulseEnergy(streamdata):
     data, meta = streamdata
