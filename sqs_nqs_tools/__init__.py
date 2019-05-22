@@ -20,4 +20,13 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-print('Welcome to xfelmay2019 version {}'.format(__version__))
+# Load experiment config dict into module wide variable
+
+import json
+config_dict = dict()
+with open('exp_config.json','r') as f:
+	config_dict = json.load(f)
+
+# Done -> Welcome Message
+
+print('Welcome to sqs_nqs_tools version {}'.format(__version__))
