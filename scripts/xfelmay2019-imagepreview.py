@@ -41,7 +41,7 @@ imagehist = xfel.DataBuffer(brightestlen)
 tidhist = xfel.DataBuffer(brightestlen)
 brightnesshist = xfel.DataBuffer(1000)
 _brightlasttid = -1
-def plotbrightest(d, tid=None):
+def plotbrightest(d, tid=0):
     '''
     Plots current time of flight data from one shot.
     Updates _tofplot window
@@ -79,8 +79,9 @@ def main(source):
     ds = xfel.servedata(source)
     ds = xfel.getImage(ds)
     for data in ds:
-        #plotimage(image)
-        plotbrightest(data['image'], tid=data['tid'])
+        #plotimage(data['image'])
+        #plotbrightest(data['image'], tid=data['tid'])
+        plotbrightest(data['image'])
 
 
 if __name__=='__main__':
