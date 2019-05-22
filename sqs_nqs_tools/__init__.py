@@ -21,11 +21,7 @@ __version__ = get_versions()['version']
 del get_versions
 
 # Load experiment config dict into module wide variable
-
-import json
-config_dict = dict()
-with open('exp_config.json','r') as f:
-	config_dict = json.load(f)
+exp_config = dict()
 
 # Done -> Welcome Message
 

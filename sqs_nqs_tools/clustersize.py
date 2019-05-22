@@ -5,7 +5,7 @@ import time
 # Import karabo libraries
 import karabo_bridge as kb
 import karabo_data as kd
-import xfelmay2019 as xfel
+import sqs_nqs_tools as xfel
 
 ''' 
 Radially integrates a scattering image

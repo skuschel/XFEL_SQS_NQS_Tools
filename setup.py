@@ -19,5 +19,5 @@ setup(name='sqs_nqs_tools',
       include_package_data=True,
       scripts=scripts,
       url='https://git.xfel.eu/gitlab/SQS/XFEL_SQS_NQS_Tools/',
-      install_requires=['numpy>1.8','json'])
+      install_requires=['numpy>1.8'])
       
