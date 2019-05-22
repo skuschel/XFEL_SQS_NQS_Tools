@@ -4,7 +4,7 @@
 
 import numpy as np
 import pyqtgraph as pg
-import xfelmay2019 as xfel
+import sqs_nqs_tools as xfel
 import time
 
 _daqaliveplot = pg.image(title='DAQ alive: Green good, red bad')
