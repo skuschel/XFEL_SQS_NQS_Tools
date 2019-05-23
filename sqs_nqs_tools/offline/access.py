@@ -7,6 +7,8 @@ runDataDict = dict()
 runDataDict["runDir"]=None
 runDataDict["runData"]=None
 
+raw_dir = '/gpfs/exfel/exp/SQS/201802/p002195/raw/'
+
 def runFormat( runNumber ):
     '''
     formats run number for accessing data through karabo commands
@@ -16,6 +18,19 @@ def runFormat( runNumber ):
             returns formatted run number   
     '''
     return '/r{0:04d}'.format(runNumber)
+
+def runDir( runNumber , path=raw_dir):
+    '''
+    formats run number to path where hdf5 files are located -> for accessing data through karabo commands
+        inputs 
+            runNumber = run of interest
+            optional path = path where all the runs are located - default: raw directory
+        outputs
+            returns runDirectory as string
+    '''
+    runStr = runFormat( run )
+    runDirectory = path+runStr
+    return runDirectory
 
 def getData(runDir, devicePath, dataPath, forceUpdate = False):
     '''
@@ -35,29 +50,3 @@ def getData(runDir, devicePath, dataPath, forceUpdate = False):
     
     return data
 
-def getPulseEnergies( run , path ):
-    '''
-        Returns pulse energy
-        BE WARY OF THIS FUNCTION!!!! Might not return true PE depending on train settings.
-    '''
-    runStr = runFormat( run )
-    runData = kd.RunDirectory(path+runStr)
-    print('BE WARY OF THIS FUNCTION!!!! Might not return true PE depending on train settings.')
-    data = runData.get_array( 'SA3_XTD10_XGM/XGM/DOOCS:output','data.intensityTD')
-    dataArray = np.asarray( data )
-    PID = np.argmin( np.abs( dataArray[0,:]-1 ) )
-    
-    
-    return np.asarray(data.trainId), np.asarray(data[:,PID-1])
-
-def getChamberHeight( run , path ):
-    runStr = runFormat( run )
-    runData = kd.RunDirectory(path+runStr)
-    data=(runData.get_array( 'SQS_AQS_MOV/MOTOR/Y_DOWNSTR','actualPosition.value'))    
-    return np.asarray(data.trainId), np.asarray(data)
-    
-def getPulseDelay( run , path ):
-    runStr = runFormat( run )
-    runData = kd.RunDirectory(path+runStr)
-    data=(runData.get_array( 'SQS_NQS_CRSC/TSYS/PARKER_TRIGGER','actualDelay.value'))   
-    return np.asarray(data.trainId), np.asarray(data)
