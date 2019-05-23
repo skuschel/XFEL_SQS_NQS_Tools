@@ -13,6 +13,7 @@ from .MCP import *
 from .offlineAccess import *
 from .clustersize import *
 from .correlationPlots import *
+from .experimentDefaults import *
 from . import analysis
 
 
@@ -20,8 +21,6 @@ from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
 
-# Load experiment config dict into module wide variable
-exp_config = dict()
 
 # Done -> Welcome Message
 

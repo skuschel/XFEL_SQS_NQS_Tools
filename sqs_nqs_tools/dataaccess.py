@@ -6,6 +6,7 @@ Second part of the file contains access functions to the data within a stream wi
 Stephan Kuschel, 2019
 '''
 from . import generatorpipeline as gp
+from experimentDefaults import defaultConf
 import numpy as np
 
 
@@ -35,9 +36,9 @@ def servedata(host, type='REQ'):
 
 
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(streamdata, idx_range=[262000,290000], **kwargs): ###tofrange
+def _getTof(streamdata, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], **kwargs):
     data, meta = streamdata
-    ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples'] ###tofDevice
+    ret = data[tofDev]['digitizers.channel_1_A.raw.samples']
     return np.array(ret[idx_range[0]:idx_range[1]])
 getTof = gp.pipeline_parallel(2)(_getTof)  # this works
 
@@ -49,7 +50,7 @@ getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
 
 @gp.pipeline
-def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-2000 ): ###tofrange, baselineFrom
+def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineFrom=-2000 ): ###baselineFrom
     '''
     input:
         streamdata
@@ -60,7 +61,7 @@ def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-200
     Matthew Ware, 2019
     '''
     data, meta = streamdata
-    toftrace = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    toftrace = data[tofDev]['digitizers.channel_1_A.raw.samples']
     # Reduce dimension of TOF to span desired range
     newtof = toftrace[downsampleRange[0]:downsampleRange[1]]
     N = newtof.size
@@ -117,7 +118,7 @@ def tid(streamdata):
     return ret
 
 @gp.pipeline
-def getImageandTof(streamdata):
+def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange']):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
     ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data'] ###imageDevice
@@ -126,8 +127,8 @@ def getImageandTof(streamdata):
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
-    tofraw = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples'] ###tofDevice
-    tofcut = np.array(tofraw[262000:290000]) ###tofRange
+    tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
+    tofcut = np.array(tofraw[idx_range[0]:idx_range[1]]) ###tofRange
     return dict(image=ret, tid=tid, tof=tofcut)
 
 # --- scalar values: motor positions.... ---
