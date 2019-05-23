@@ -28,7 +28,7 @@ def runDir( runNumber , path=raw_dir):
         outputs
             returns runDirectory as string
     '''
-    runStr = runFormat( run )
+    runStr = runFormat( runNumber )
     runDirectory = path+runStr
     return runDirectory
 
