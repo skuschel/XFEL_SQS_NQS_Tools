@@ -3,6 +3,9 @@ import matplotlib.pyplot as plt
 import karabo_bridge as kb
 import karabo_data as kd
 
+runDataDict = dict()
+runDataDict["runDir"]=None
+runDataDict["runData"]=None
 
 def runFormat( runNumber ):
     '''
@@ -13,7 +16,30 @@ def runFormat( runNumber ):
             returns formatted run number   
     '''
     return '/r{0:04d}'.format(runNumber)
+    
+def 
 
+def getData(runDir, devicePath, dataPath, forceUpdate = False):
+	'''
+        Returns Data from given adress / device using Karabo Data or using already loaded data if no update forced and run already loaded
+        run_dir - directory of run files (hdf5)
+        device_path - path for device in hdf5 file eg "SQS_AQS_MOV/MOTOR/Y_DOWNSTR"
+        data_path - path to data within hdf5 device path eg "actualPosition.value"
+    '''
+    global runDataDict
+    
+    if runDataDict["runDir"] is not None and runDataDict["runData"] is not None and not forceUpdate and runDataDict["runDir"] == runDir:
+		# no action needed the dictionary runDataDict contains already the data we are interested in and user does not neccesarily desires the update
+		pass
+	else:
+		runDataDict["runData"] = kd.RunDirectory(runDir)
+		runDataDict["runDir"] = runDir
+		
+    data = runDataDict["runData"].get_array(devicePath, dataPath)
+    
+    return data
+	
+	
 
 def getPulseEnergies( run , path ):
     '''
