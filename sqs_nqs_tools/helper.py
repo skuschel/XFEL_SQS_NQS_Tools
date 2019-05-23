@@ -83,7 +83,7 @@ class DataBuffer():
             function which reduces each element in the buffer to a single scalar
             used to find the max.
         '''
-        normvals = normby(norm)
+        normvals = self.normby(norm)
         idx = np.argmax(norm)
         return self[idx]
 

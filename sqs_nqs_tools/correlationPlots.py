@@ -19,7 +19,7 @@ def correlationPlots(run, Path, roi1, offset):
     runf=xfel.runFormat(run)
     runData = kd.RunDirectory(Path+runf)
 
-    pixels, tofs, trainIds = xfel.getRunTOF( run, Path, tofrange=(265000,285000) )
+    pixels, tofs, trainIds = xfel.getRunTOF( run, Path, tofrange=(265000,285000) ) ###tofrange
     pulse_E = np.asarray(runData.get_array('SA3_XTD10_XGM/XGM/DOOCS:output','data.intensityTD' ))
     scatImagesini = np.asarray(runData.get_array('SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', 'data.image.pixels'))
     

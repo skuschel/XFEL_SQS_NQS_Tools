@@ -30,7 +30,7 @@ def findTOFPeaks( toftrace ):
 #    base_width = 200.
 #    zf = find_peaks_cwt(toftrace, [base_width, base_width/2., base_width/4.])
 
-    base_width = 100.
+    base_width = 100. ###base_width
     zf = find_peaks_cwt(toftrace, [base_width])
     
     # Create averaging zones around peaks

@@ -1,10 +1,12 @@
+##*** seems more like an offline analysis script - strip out the analysis functions and then make a seperate offline loader?
+
 import numpy as np
 import matplotlib.pyplot as plt
 import karabo_bridge as kb
 import karabo_data as kd
 
 
-def runFormat( runNumber ):
+def runFormat( runNumber ): ##*** should this be in here?
     '''
     formats run number for accessing data through karabo commands
         inputs 
@@ -17,7 +19,7 @@ def runFormat( runNumber ):
 
 
 def analyzeAverageImage( runNumber, 
-                        path='/gpfs/exfel/exp/SQS/201921/p002430/raw',
+                        path='/gpfs/exfel/exp/SQS/201921/p002430/raw', ###imagePath
                         maskRadius=100):
     '''
     finds mean scattering and plots and returns that image

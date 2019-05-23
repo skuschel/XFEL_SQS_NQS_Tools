@@ -35,21 +35,21 @@ def servedata(host, type='REQ'):
 
 
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(streamdata, idx_range=[262000,290000], **kwargs):
+def _getTof(streamdata, idx_range=[262000,290000], **kwargs): ###tofrange
     data, meta = streamdata
-    ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
+    ret = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples'] ###tofDevice
     return np.array(ret[idx_range[0]:idx_range[1]])
 getTof = gp.pipeline_parallel(2)(_getTof)  # this works
 
 def _getPulseEnergy(streamdata):
     data, meta = streamdata
-    ret = data['SA3_XTD10_XGM/XGM/DOOCS']['pulseEnergy.crossUsed.value']
+    ret = data['SA3_XTD10_XGM/XGM/DOOCS']['pulseEnergy.crossUsed.value'] ###pulseEnergyDevice
     return ret
 getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
 
 @gp.pipeline
-def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-2000 ):
+def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-2000 ): ###tofrange, baselineFrom
     '''
     input:
         streamdata
@@ -87,7 +87,7 @@ def baselinedTOF(streamdata, downsampleRange=(268000,280000) , baselineFrom=-200
 #    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR']['timestamp.tid']
 #    return dict(image=ret, tid=tid)
 
-def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'):
+def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'): ###should this even have a default?
     data, meta = streamdata
     ret = data[spec0][spec1]
     return ret
@@ -96,8 +96,8 @@ def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spe
 def getImage(streamdata):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data'] ###imageDevice
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid'] ###imageDevice
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
@@ -113,21 +113,21 @@ def tid(streamdata):
     train id
     '''
     data, meta = streamdata
-    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid'] ###imageDevice
     return ret
 
 @gp.pipeline
 def getImageandTof(streamdata):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
+    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data'] ###imageDevice
+    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid'] ###imageDevice
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
-    tofraw = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples']
-    tofcut = np.array(tofraw[262000:290000])
+    tofraw = data['SQS_DIGITIZER_UTC1/ADC/1:network']['digitizers.channel_1_A.raw.samples'] ###tofDevice
+    tofcut = np.array(tofraw[262000:290000]) ###tofRange
     return dict(image=ret, tid=tid, tof=tofcut)
 
 # --- scalar values: motor positions.... ---

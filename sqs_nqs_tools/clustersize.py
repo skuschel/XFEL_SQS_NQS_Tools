@@ -36,9 +36,9 @@ Calculates atomic form factor for Carbon
         f = formfactor, returns an array
 '''
 
-def formfactor(q):
+def formfactor(q): ###formfactor
 # for Carbon
-    a = np.array([2.31, 1.02, 1.5886,0.865])
+    a = np.array([2.31, 1.02, 1.5886,0.865]) 
     b = np.array([20.8439,10.2075,0.5687,51.6512])
     c = 0.2156
     
@@ -99,7 +99,7 @@ This function calculates the size of a cluster, given an scattering image
 
 def clusterSize (image, center):
     intensity = radial_profile(image, center)
-    intCrop = intensity[10:]
+    intCrop = intensity[10:] ###centerCut
     pixel = np.arange(0, len(intCrop))
     popt = clusterFit(pixel, intCrop)
     clustersize = popt[1]
