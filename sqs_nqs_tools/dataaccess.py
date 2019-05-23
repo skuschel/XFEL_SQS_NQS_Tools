@@ -123,7 +123,7 @@ def tid(streamdata, imDev=defaultConf['imageDevice']):
 def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice']):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data[imDev]['data.image.data'] 
+    ret = data[imDev]['data.image.pixels'] 
     tid = meta[imDev]['timestamp.tid'] 
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']

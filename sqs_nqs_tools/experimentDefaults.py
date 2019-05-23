@@ -8,6 +8,6 @@ defaultConf['tofRange'] = [262000,290000] #the range where interesting data appe
 defaultConf['tofBaseEnd'] = 100 # the first n samples to consider as baseline
 
 #device addresses
-defaultConf['imageDevice'] = 'SQS_DPU_LIC/CAM/YAG_UPSTR:output'
+defaultConf['imageDevice'] = 'SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput'
 defaultConf['tofDevice'] = 'SQS_DIGITIZER_UTC1/ADC/1:network'
 defaultConf['pulseEDevice'] = 'SA3_XTD10_XGM/XGM/DOOCS'
