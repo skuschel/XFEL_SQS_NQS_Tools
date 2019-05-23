@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import karabo_bridge as kb
 import karabo_data as kd
 
+from . import access
+from . import adata as adata
 
 def averageTOF( tofs ):
     '''
@@ -317,7 +319,7 @@ def getAvgRunsTOF( runRange, path, tofrange ):
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        tids, tof, pixels  = adata.getTOF( arun, path=path, tofrange=tofrange)
         avgtof = averageTOF(tof)
         tofs.append(avgtof)
         
@@ -328,7 +330,7 @@ def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,2
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        tids, tof, pixels = adata.getTOF( arun, path=path, tofrange=tofrange)
         avgtof = averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
         tofs.append(avgtof)
         
