@@ -42,20 +42,20 @@ def _getTof(streamdata, idx_range=defaultConf['tofRange'], tofDev=defaultConf['t
     return np.array(ret[idx_range[0]:idx_range[1]])
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
-def _getPulseEnergy(streamdata):
+def _getPulseEnergy(streamdata, energyDev=defaultConf['pulseEDevice']):
     data, meta = streamdata
-    ret = data['SA3_XTD10_XGM/XGM/DOOCS']['pulseEnergy.crossUsed.value'] ###pulseEnergyDevice
+    ret = data[energyDev]['pulseEnergy.crossUsed.value'] 
     return ret
 getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
 
 @gp.pipeline
-def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineFrom=-2000 ): ###baselineFrom
+def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
     '''
     input:
         streamdata
         downsampleRange: (int,int) tuple giving range over which to downsmaple TOF
-        baselineFrom: gives start index for calculating baseline average
+        baselineTo: gives end index for calculating baseline average
     output:
         normalizedTOFTrace: puts tof trace in standard form for analysis
     Matthew Ware, 2019
@@ -68,7 +68,7 @@ def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=def
     x = np.arange(N)
 
     # Substract mean of remaining TOF trace and take absolute value
-    newtof_mean = np.mean( newtof[baselineFrom:] )
+    newtof_mean = np.mean(newtof[:baselineTo])
     return newtof - newtof_mean
 
 
@@ -94,10 +94,10 @@ def getSomeDetector(streamdata, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spe
     return ret
 
 @gp.pipeline
-def getImage(streamdata):
+def getImage(streamdata, imDev=defaultConf['imageDevice']):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.pixels']
+    ret = data[imDev]['data.image.pixels']
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
 #    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
     tid = 0
@@ -111,26 +111,26 @@ def getImage(streamdata):
 # --- scalar values: motor positions.... ---
 
 @gp.pipeline
-def tid(streamdata):
+def tid(streamdata, imDev=defaultConf['imageDevice']):
     '''
     train id
     '''
     data, meta = streamdata
-    ret = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid'] ###imageDevice
+    ret = meta[imDev]['timestamp.tid'] 
     return ret
 
 @gp.pipeline
-def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange']):
+def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice']):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data'] ###imageDevice
-    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid'] ###imageDevice
+    ret = data[imDev]['data.image.data'] 
+    tid = meta[imDev]['timestamp.tid'] 
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
 #    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
 #    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
     tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
-    tofcut = np.array(tofraw[idx_range[0]:idx_range[1]]) ###tofRange
+    tofcut = np.array(tofraw[idx_range[0]:idx_range[1]]) 
     return dict(image=ret, tid=tid, tof=tofcut)
 
 # --- scalar values: motor positions.... ---
