@@ -17,7 +17,7 @@ def runFormat( runNumber ):
     '''
     return '/r{0:04d}'.format(runNumber)
     
-def 
+
 
 def getData(runDir, devicePath, dataPath, forceUpdate = False):
 	'''
