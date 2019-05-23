@@ -22,9 +22,7 @@ def getTOF( runNumber, path=raw_dir, tofrange=(260000,285000),
             trainIds
 
     '''
-    run = runFormat( runNumber )
-    runData = kd.RunDirectory(path+run)
-    
+
     data = access.getData(access.runDir( runNumber , path=path), dirspec, elementspec)
     
     pixels = np.arange(tofrange[0],tofrange[1])
