@@ -4,7 +4,7 @@
 
 import numpy as np
 import pyqtgraph as pg
-import sqs_nqs_tools as xfel
+import sqs_nqs_tools.online as xfel
 
 
 @xfel.filter
