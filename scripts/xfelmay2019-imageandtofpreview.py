@@ -4,7 +4,8 @@
 
 import numpy as np
 import pyqtgraph as pg
-import sqs_nqs_tools as xfel
+import sqs_nqs_tools.online as xfel
+import sqs_nqs_tools as tools
 from pyqtgraph.ptime import time
 
 
@@ -69,11 +70,11 @@ _pggalimg_3 = win_gallery.addViewBox(row = 1, col = 3)
 
 ####_pgbrightestimg = pg.image(title='Brightest Shots {}'.format(xfel.__version__))
 brightestlen = 15
-imagehist = xfel.DataBuffer(brightestlen)
-tofhist = xfel.DataBuffer(brightestlen)
-tidhist = xfel.DataBuffer(brightestlen)
-brightnesshist = xfel.DataBuffer(300)
-tofsignalhist = xfel.DataBuffer(300)
+imagehist = tools.DataBuffer(brightestlen)
+tofhist = tools.DataBuffer(brightestlen)
+tidhist = tools.DataBuffer(brightestlen)
+brightnesshist = tools.DataBuffer(300)
+tofsignalhist = tools.DataBuffer(300)
 _brightlasttid = -1
 _numbergoodshots = -1
 lastTime = time()
