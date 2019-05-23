@@ -119,8 +119,8 @@ def tid(streamdata, imDev=defaultConf['imageDevice']):
     ret = meta[imDev]['timestamp.tid'] 
     return ret
 
-@gp.pipeline
-def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice']):
+#@gp.pipeline
+def _getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice']):
     data, meta = streamdata
 #    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
     ret = data[imDev]['data.image.pixels'] 
@@ -132,5 +132,5 @@ def getImageandTof(streamdata, tofDev=defaultConf['tofDevice'], idx_range=defaul
     tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     tofcut = np.array(tofraw[idx_range[0]:idx_range[1]]) 
     return dict(image=ret, tid=tid, tof=tofcut)
-
+getImageandTof = gp.pipeline_parallel(defaultConf['dataWorkers'])(_getImageandTof)  # this works
 # --- scalar values: motor positions.... ---
