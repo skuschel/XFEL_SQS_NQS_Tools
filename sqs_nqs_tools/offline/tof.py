@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 import karabo_bridge as kb
 import karabo_data as kd
 
+from . import access
+from . import adata as adata
 
 def averageTOF( tofs ):
     '''
@@ -187,36 +189,10 @@ def generateFullCorrection( correction,  pixels, corrpixels ):
 
 def correctTOF( tofs, pixels, correction, corrpixels ):
     fullCorrection = generateFullCorrection( correction, pixels, corrpixels )
-    return tofs-fullCorrection
-        
-def getRunTOF( runNumber, path, tofrange=(260000,285000), 
-              dirspec='SQS_DIGITIZER_UTC1/ADC/1:network', 
-              elementspec='digitizers.channel_1_A.raw.samples', 
-              correctionRange=(400000,400032) ):
-    '''
-    gets TOF data for a given run 
-        inputs 
-            runNumber = number of run of interest
-            path = path for data; defined at the top
-        outputs
-            pixels = 
-            tofdata 
-            trainIds
-
-    '''
-    run = runFormat( runNumber )
-    runData = kd.RunDirectory(path+run)
-    pixels = np.arange(tofrange[0],tofrange[1])
-    
-    data = runData.get_array( dirspec,elementspec )
-    correction = np.mean( np.asarray(data)[ : , correctionRange[0]:correctionRange[1] ], 0)
-    corrpixels = np.arange(correctionRange[0],correctionRange[1])
-    
-    tofdata=correctTOF(np.asarray(data)[ : , tofrange[0]:tofrange[1] ], pixels, correction, corrpixels)
-    trainIds =np.asarray(data.trainId)
-    return pixels, tofdata, trainIds   
+    return tofs-fullCorrection 
 
 def getTrainIds( runNumber, path ):
+    # moved to access as getTrainIds(runpath)
     '''
     Gets train IDs of specified run
         inputs 
@@ -316,7 +292,7 @@ def getAvgRunsTOF( runRange, path, tofrange ):
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        tids, tof, pixels  = adata.getTOF( arun, path=path, tofrange=tofrange)
         avgtof = averageTOF(tof)
         tofs.append(avgtof)
         
@@ -327,7 +303,7 @@ def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,2
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        pixels, tof, tids = getRunTOF( arun, path, tofrange=tofrange)
+        tids, tof, pixels = adata.getTOF( arun, path=path, tofrange=tofrange)
         avgtof = averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
         tofs.append(avgtof)
         
