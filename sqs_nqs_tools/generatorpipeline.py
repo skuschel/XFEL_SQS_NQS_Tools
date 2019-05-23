@@ -30,6 +30,7 @@ def filter(f):
         for el in gen:
             if bool(f(el)):
                 yield el
+    return ret
 
 
 def pipeline_parallel(workers=4):
@@ -64,7 +65,7 @@ def pipeline_parallel(workers=4):
                 yield cache[readidx].get()
                 readidx = (readidx + 1) % clen
                 if readidx == writeidx:
-                    pool.shutdown()
+                    pool.close()
                     return
         return ret
     return decorator
