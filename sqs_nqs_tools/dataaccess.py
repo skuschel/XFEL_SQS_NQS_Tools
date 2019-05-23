@@ -6,7 +6,7 @@ Second part of the file contains access functions to the data within a stream wi
 Stephan Kuschel, 2019
 '''
 from . import generatorpipeline as gp
-from experimentDefaults import defaultConf
+from .experimentDefaults import defaultConf
 import numpy as np
 
 
