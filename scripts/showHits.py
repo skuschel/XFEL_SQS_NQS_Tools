@@ -19,7 +19,7 @@ from pyqtgraph.ptime import time
 #        return True
 
 
-def plotHits(d, tid=None, tof=None):
+def _plotHits(d):
     '''
     Plots current time of flight data from one shot.
     Updates _tofplot window
@@ -28,9 +28,11 @@ def plotHits(d, tid=None, tof=None):
     Output:
         None, updates plot window
     '''
-    hitBuffer(d) #add the image to the hit buffer
+    hitBuffer(d['image']) #add the image to the hit buffer
     online.plotImBuffer(hitBuffer, imageViews) #plot up the hits
     pg.QtGui.QApplication.processEvents() #make sure it displays
+    return d
+plotHits = online.pipeline_parallel(1)(_plotHits)
 
 #1. setup some plots and buffers
 imBufferLength = 4
@@ -48,7 +50,7 @@ def main(source):
        
     ds = online.servedata(source) #get the datastream
     ds = online.getImageandTof(ds) #get the tofs and images from it
-        
+    ds = plotHits(ds)    
         
     #3. filter the data for hits
     #TODO
