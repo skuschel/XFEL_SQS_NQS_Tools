@@ -123,7 +123,7 @@ def plotbrightest(d, tid=None, tof=None):
         actimgitem.setLevels([0,img_data.max()])
         _pgbrightestimg.addItem(actimgitem)
         
-    brightness_threshold=10
+    brightness_threshold=0
     #if act_brightness>10:
     if act_brightness>brightness_threshold:
         _numbergoodshots+=1

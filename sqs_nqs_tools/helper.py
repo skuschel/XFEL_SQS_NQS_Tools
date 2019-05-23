@@ -50,7 +50,7 @@ class DataBuffer():
         return self.data[idx]
 
     def __len__(self):
-        return self.i if self.i < self.length else self.length
+        return self.n if self.n < self.length else self.length
 
     def __iter__(self):
         return (d for d in self.data)
