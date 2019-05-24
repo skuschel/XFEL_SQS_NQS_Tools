@@ -22,6 +22,7 @@ import numpy as np
 # ---- Access the data on disk or network ----
 
 
+#this opens the datastream
 def servedata(host, type='REQ'):
     '''
     Generator for the online data stream.
@@ -45,19 +46,19 @@ def servedata(host, type='REQ'):
 
 
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(ds, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], **kwargs):
-    data = ds['data']
-    meta = ds['meta']
+def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], **kwargs):
+    data = d['data']
+    meta = d['meta']
     ret = data[tofDev]['digitizers.channel_1_A.raw.samples']
     ds['tof'] = np.array(ret[idx_range[0]:idx_range[1]])
-    return ds
+    return d
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
-def _getPulseEnergy(ds, energyDev=defaultConf['pulseEDevice']):
-    data = ds['data']
-    meta = ds['meta']
-    ds['pulseEnergy'] = data[energyDev]['pulseEnergy.crossUsed.value'] 
-    return ds
+def _getPulseEnergy(d, energyDev=defaultConf['pulseEDevice']):
+    data = d['data']
+    meta = d['meta']
+    d['pulseEnergy'] = data[energyDev]['pulseEnergy.crossUsed.value'] 
+    return d
 getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
 
@@ -84,42 +85,20 @@ def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=def
     return newtof - newtof_mean
 
 
-# --- Image stuff ---
-
-#@gp.pipeline
-#def getImage(streamdata):
-#    data, meta = streamdata
-#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-#    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
-#    return dict(image=ret, tid=tid)
-
-#@gp.pipeline
-#def getImage(streamdata):
-#    data, meta = streamdata
-#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR']['data.image.data']
-#    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR']['timestamp.tid']
-#    return dict(image=ret, tid=tid)
-
-def getSomeDetector(ds, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'): ###should this even have a default?
-    data = ds['data']
-    meta = ds['meta']
-    ds[name] = data[spec0][spec1]
-    return ds
+@gp.pipeline
+def getSomeDetector(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'): ###should this even have a default?
+    data = d['data']
+    meta = d['meta']
+    d[name] = data[spec0][spec1]
+    return d
 
 @gp.pipeline
-def getImage(streamdata, imDev=defaultConf['imageDevice']):
-    data, meta = streamdata
-#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
-    ret = data[imDev]['data.image.pixels']
-#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['data.image.data']
-#    tid = meta['SQS_DPU_LIC/CAM/YAG_UPSTR:output']['timestamp.tid']
-    tid = 0
-#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
-#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
-#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
-#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
-    return dict(image=ret, tid=tid)
-
+def getImage(d, imDev=defaultConf['imageDevice']):
+    data = ds['data']
+    meta = ds['meta']   
+    d['image'] = data[imDev]['data.image.pixels']
+    d['tid'] = meta[imDev]['timestamp.tid']
+    return d
 
 # --- scalar values: motor positions.... ---
 
@@ -133,27 +112,21 @@ def tid(streamdata, imDev=defaultConf['imageDevice']):
     return ret
 
 #@gp.pipeline
-def _getImageandTof(ds, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice'], baselineTo=defaultConf['tofBaseEnd']):
-    data = ds['data']
-    meta = ds['meta']
-#    ret = data['SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput']['data.image.data']
- #   ret = data[imDev]['data.image.pixels'] 
-#    tid = meta[imDev]['timestamp.tid'] 
-#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['data.image.data']
-#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_MASTER:output']['timestamp.tid']
-#    ret = data['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['data.image.data']
-#    tid = meta['SQS_AQS_VMIS/CAM/PHSCICAM_SLAVE:output']['timestamp.tid']
+def _getImageandTof(d, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['tofRange'], imDev=defaultConf['imageDevice'], baselineTo=defaultConf['tofBaseEnd']):
+    data = d['data']
+    meta = d['meta']
+    
     tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     tofcut = np.array(tofraw[idx_range[0]:idx_range[1]])
+    
     #subtract a baseline if we are using one
     if baselineTo > 0:
-        ds['tof'] = tofcut - np.mean(tofcut[:baselineTo])
+        d['tof'] = tofcut - np.mean(tofcut[:baselineTo])
     else:
-        ds['tof'] = tofcut
+        d['tof'] = tofcut
 
-    ds['image'] = data[imDev]['data.image.pixels']
-    ds['tid'] = tid = meta[imDev]['timestamp.tid']
-    return ds
-    #return dict(image=ret, tid=tid, tof=tofcut)
+    d['image'] = data[imDev]['data.image.pixels']
+    d['tid'] = tid = meta[imDev]['timestamp.tid']
+    return d
 getImageandTof = gp.pipeline_parallel(defaultConf['dataWorkers'])(_getImageandTof)  # this works
 # --- scalar values: motor positions.... ---

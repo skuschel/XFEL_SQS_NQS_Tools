@@ -9,7 +9,6 @@ import sqs_nqs_tools.online as online
 import sqs_nqs_tools as tools
 from pyqtgraph.ptime import time
 
-
 #@xfel.filter
 #def filterbywhatever(ds, thres=5):
 #    '''
@@ -29,15 +28,29 @@ def plotHits(d):
         None, updates plot window
     '''
     hitBuffer(d['image']) #add the image to the hit buffer
+    tofBuffer(d['tof']) #add the tof to the hit buffer
+    bestIm(d['image'], np.sum(d['image'])) #add tat the best hit
+    
     hitsFig.plotImBuffer(hitBuffer) #plot up the hits
+    tofFig.plotTofBuffer(tofBuffer) #plot up the hits
+    
+    bestFig.plotImBuffer(bestIm) #plot up the high scores
+    
     pg.QtGui.QApplication.processEvents() #make sure it displays
+ #  print('Photon flux = ', d['phoFlux'])
     return d
 #plotHits = online.pipeline_parallel(1)(_plotHits) #if it is to be a pipeline
 
 #1. setup some plots and buffers
 imBufferLength = 4
 hitBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
+tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in 
+
+bestIm = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
+
 hitsFig = online.ImBufferPlotter(imBufferLength)
+tofFig = online.TofBufferPlotter(imBufferLength)
+bestFig = online.ImBufferPlotter(imBufferLength)
 #imageViews, imFig = online.makeImageBufferPlots(imBufferLength) #a figure to show that buffer in
 
 def main(source):
@@ -51,6 +64,9 @@ def main(source):
        
     ds = online.servedata(source) #get the datastream
     ds = online.getImageandTof(ds) #get the tofs and images from it
+    
+    #get a random piece of data
+    ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value')
         
     #3. filter the data for hits
     #TODO

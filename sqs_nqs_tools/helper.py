@@ -115,7 +115,7 @@ class SortedBuffer(DataBuffer):
             self.n += 1
             self.i = 0
             indx = np.argsort(self.values)
-            self.buffer = self.buffer[indx]
+            self._buffer = self._buffer[indx]
             self.values = self.values[indx]
 
     @property

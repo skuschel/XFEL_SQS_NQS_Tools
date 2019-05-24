@@ -3,7 +3,7 @@ import numpy as np
 import pyqtgraph as pg
 
 class ImBufferPlotter():
-    def __init__(self, length):
+    def __init__(self, length, title=''):
         '''
         creates a figure with subplots, ready to display a buffer full of images
         this does not give you the color bars. Good luck adding them
@@ -11,9 +11,8 @@ class ImBufferPlotter():
         remember to keep the fig output in memory, or it closes
         
         Input:
-            length of buffer
-        Output:
-            list of imageItems, the graphicsWindow
+            length of buffer, figure title
+
         '''
         self.fig = pg.GraphicsWindow()
         self.views = []
@@ -30,4 +29,26 @@ class ImBufferPlotter():
         '''
         for v,b in zip(self.views, buf):
             v.setImage(b)		
+            
+            
+class TofBufferPlotter():
+    def __init__(self, length, title=''):
+        '''
+        creates a figure with subplots, ready to display a buffer full of tofs
+               
+        Input:
+            length of buffer, window title
+
+        '''
+        self.fig = pg.GraphicsWindow()
+        self.plots = []
+        for i in range(length):
+            self.plots.append(self.fig.addPlot(row=0, col=i).plot())
+
+    def plotTofBuffer(self, buf):
+        '''
+		plot all the images in a buffer into this figure
+        '''	
+        for p,b in zip(self.plots, buf):
+            p.setData(np.asarray(b))		
 
