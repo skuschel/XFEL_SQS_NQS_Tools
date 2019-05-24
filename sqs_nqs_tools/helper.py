@@ -109,12 +109,12 @@ class SortedBuffer(DataBuffer):
             self._buffer[self.n] = data
             self.n += 1
             self.i += 1
-        elif value >= np.min(values):
+        elif value >= np.min(self.values):
             self._buffer[0] = data #always replace the lowest value, we keep it sorted
             self.values[0] = value
             self.n += 1
             self.i = 0
-            indx = np.argsort(values)
+            indx = np.argsort(self.values)
             self.buffer = self.buffer[indx]
             self.values = self.values[indx]
 
