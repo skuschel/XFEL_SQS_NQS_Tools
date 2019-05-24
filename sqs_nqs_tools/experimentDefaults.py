@@ -4,7 +4,7 @@
 defaultConf = dict()
 
 #Define the defaults for all the detector settings
-defaultConf['tofRange'] = [520000,600000] #the range where interesting data appears
+defaultConf['tofRange'] = [520000,8000000] #the range where interesting data appears
 defaultConf['tofBaseEnd'] = 100 # the first n samples to consider as baseline
 
 #device addresses
