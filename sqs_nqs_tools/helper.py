@@ -87,6 +87,44 @@ class DataBuffer():
         idx = np.argmax(norm)
         return self[idx]
 
+#databuffer that keeps the data sorted by some value
+class SortedBuffer(DataBuffer):
+    def __init__(self, length=10):
+        self.length = length
+        self._buffer = None
+        self.i = 0  # next
+        self.n = 0  # data processed
+        self.values = np.zeros(length)
+
+    def __call__(self, data, value):
+        '''
+        add data to the buffer if its value is bigger than the smallest
+        '''
+        if self._buffer is None:
+            self._initarray(data)
+    
+        data = np.asarray(data)
+
+        if self.n < self.length:
+            self._buffer[self.n] = data
+            self.n += 1
+            self.i += 1
+        elif value >= np.min(values):
+            self._buffer[0] = data #always replace the lowest value, we keep it sorted
+            self.values[0] = value
+            self.n += 1
+            self.i = 0
+            indx = np.argsort(values)
+            self.buffer = self.buffer[indx]
+            self.values = self.values[indx]
+
+    @property
+    def data(self):
+        '''
+        return the usable data from the buffer, sorted from old to new
+        '''
+        endidx = None if self.n > self.length else self.n
+        return self.buffer[0:endidx]
 
 
 class RollingAverage(DataBuffer):
