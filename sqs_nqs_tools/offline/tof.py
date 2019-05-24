@@ -6,7 +6,8 @@ import karabo_data as kd
 from . import access
 from . import adata as adata
 
-def averageTOF( tofs ):
+
+def averageTOF( tofs ): #check
     '''
     takes TOF data for a given run and averages.  
         inputs
@@ -16,17 +17,7 @@ def averageTOF( tofs ):
     '''
     return np.mean( tofs, 0 )
 
-def runFormat( runNumber ):
-    '''
-    formats run number for accessing data through karabo commands
-        inputs 
-            runNumber = run of interest
-        outputs
-            returns formatted run number   
-    '''
-    return '/r{0:04d}'.format(runNumber)
-
-def plotTOF( pixels, tof, xlabel='pixels' ):
+def plotTOF( pixels, tof, xlabel='pixels' ): 
     '''
     Plots TOF spectra, not callibrated for m/z 
         inputs 
@@ -87,7 +78,7 @@ def showROIs( pixels, tof, onePlus, lightPeak, highCharge ):
     plt.legend(  ) 
 
 
-def averageBrightestTOFs( pixels, tofs, integrateAt=(280000 - 1000,280000 + 1500), behlkeAt=268000 ):
+def averageBrightestTOFs( pixels, tofs, integrateAt=(280000 - 1000,280000 + 1500), behlkeAt=268000 ): #check
     '''
     Averages the brightest TOFs from a given run, ie outlier rejection
         inputs 
@@ -191,21 +182,6 @@ def correctTOF( tofs, pixels, correction, corrpixels ):
     fullCorrection = generateFullCorrection( correction, pixels, corrpixels )
     return tofs-fullCorrection 
 
-def getTrainIds( runNumber, path ):
-    # moved to access as getTrainIds(runpath)
-    '''
-    Gets train IDs of specified run
-        inputs 
-            runNumber = number of run of interest
-            path = path for data; defined at the top
-        outputs
-            array of train IDs 
-
-    '''
-    run = runFormat( runNumber )
-    runData = kd.RunDirectory(path+run)
-    return runData.train_ids
-
 def waterfallBrightest( pixels, tofs, nbright=100, 
                                       threshSum=0.1, behlkeAt=268000,
                                       integrateAt=(269000 - 200, 276000)):  
@@ -241,9 +217,10 @@ def waterfallBrightest( pixels, tofs, nbright=100,
         offset += np.min( tof[behlkeAt<pixels] )
         
         
-def waterfallBrightest_labelByTrainId( pixels, tofs, trainIds, nbright=100, 
+def waterfallBrightest_labelByTrainId( pixels, tofs, nbright=100, 
                                       threshSum=0.1, behlkeAt=268000,
-                                      integrateAt=(269000 - 200, 276000)):  
+                                      integrateAt=(269000 - 200, 276000),
+                                      showplot = True):                             #check
     '''
     Makes waterfall plot of the brightest TOF spectra from a given run, labeled with train ID
     Can be sorted by onePlus, lightPeak, or highCharge (defined at the top) by specifying onePlus =
@@ -259,22 +236,31 @@ def waterfallBrightest_labelByTrainId( pixels, tofs, trainIds, nbright=100,
     plt.figure(figsize=(10,100))
     offset = 0.
     
+    # integral over all values in tofrange that are larger than behlkeat
     fullSum = np.abs(np.sum( tofs[:,(behlkeAt<pixels)], 1 ))
     
+    # maximum integral found
     maxSum = np.max((fullSum))
+    
+    # a shot is interesting when its integral is at least 10% of max reached value (for default thresSum=0.1)
     interestingShots = fullSum > maxSum*threshSum
     
+    # integrate over integrateAt range for each spectrum
     onePlusSum = np.nansum( tofs[:, (integrateAt[0]<pixels)&(pixels<integrateAt[1]) ], 1 )
     
+    # take abs value from integrals over integrateAt range  (to be able to look for highest value) and look only at interesting shots
     ratio = np.abs(onePlusSum.astype(float) )[interestingShots]
     
+    # sort them by highest values and take the last `nbright` shots (eg 100)
     inds = np.argsort(ratio)[-nbright:]
     
+    # no get the arrays with the interesting raw data from results
     subtofs = tofs[interestingShots,:]
-    subtrains = trainIds[interestingShots]
+    subtrains = np.asarray(tofs.trainId)
     
-    startTextX = pixels[-1] - 2e3
+    startTextX = pixels[-1] - 2e3 #cosmetics
     
+    #plot them all
     for idx, currind in enumerate(inds):
         tof = subtofs[currind,:]
         plt.plot( pixels[behlkeAt<pixels] , tof[behlkeAt<pixels] + offset )
@@ -284,6 +270,11 @@ def waterfallBrightest_labelByTrainId( pixels, tofs, trainIds, nbright=100,
         
         plt.annotate(str( subtrains[ currind ] ), (startTextX, baseline))
         offset += np.min( tof[behlkeAt<pixels] )
+    
+    if showplot:
+        plt.show()
+    else:
+        pass
         
     return subtrains[inds]
 
