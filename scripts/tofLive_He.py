@@ -23,11 +23,13 @@ def foldTofs(d):
 	fold all the tofs from a train into a singal tof
 	'''
 	tof = d['tof']
-	tofLength = 50000
-	tofLength = tofLength if tofLength < len(tof) else len(tof)-1
-	startSamples = [1] #the sample where each tof begins
+	tofLength = 66000
+	startSamples = [13264, 79490, 145716, 211942] #the sample where each tof begins
+	tofLength = tofLength if np.max(startSamples) + tofLength < len(tof) else len(tof) - np.max(startSamples)
+
 	newTof = np.zeros(tofLength)
 	for s in startSamples:
+		print('startSample = {}, lowest peak = {}'.format(s, np.argmin(tof[s:s+tofLength])+s))
 		newTof += tof[s:s+tofLength]
 	d['tof'] = newTof
 	return d
@@ -43,9 +45,12 @@ def plotHits(d):
     '''
     tofBuffer(d['tof']) #add the tof to the hit buffer
     bestTof(d['tof'], -np.min(d['tof'])) #add tat the best hit
+    lowestTof(-np.min(d['tof'])) #a histogram of tof height
+    avgTof(d['tof']) #the average tof
+    
     tofFig.plotTofBuffer(tofBuffer) #plot up the hits
     bestTofFig.plotTofBuffer(bestTof) #plot up the high scores
-    lowestTof(-np.min(d['tof'])) #a histogram of tof height
+    avgPlot.plotTofBuffer(avgTof)
     
     tofInt(np.sum(d['tof'])) #make that integral plot
     tofPlotInt.plot(tofInt)
@@ -60,6 +65,9 @@ tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
 
 #buffers for highscores
 bestTof = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
+
+avgTof = tools.Accumulator()
+avgPlot = online.TofBufferPlotter(1, 'average ToF')
 
 #the plots
 tofFig = online.TofBufferPlotter(imBufferLength, title='4 newest')

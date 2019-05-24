@@ -150,6 +150,9 @@ class Accumulator():
 
     def __len__(self):
         return self.n
+        
+    def __iter__(self):
+        return (d for d in [self.mean])
 
     @property
     def buffer(self):
