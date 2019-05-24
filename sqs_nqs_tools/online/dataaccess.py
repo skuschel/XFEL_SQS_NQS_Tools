@@ -49,7 +49,7 @@ def _getTof(ds, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice
     data = ds['data']
     meta = ds['meta']
     ret = data[tofDev]['digitizers.channel_1_A.raw.samples']
-    ds['tof'] np.array(ret[idx_range[0]:idx_range[1]])
+    ds['tof'] = np.array(ret[idx_range[0]:idx_range[1]])
     return ds
 getTof = gp.pipeline_parallel(1)(_getTof)  # this works
 
@@ -146,7 +146,7 @@ def _getImageandTof(ds, tofDev=defaultConf['tofDevice'], idx_range=defaultConf['
     tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     tofcut = np.array(tofraw[idx_range[0]:idx_range[1]])
     #subtract a baseline if we are using one
-    if baseLineTo > 0:
+    if baselineTo > 0:
         ds['tof'] = tofcut - np.mean(tofcut[:baselineTo])
     else:
         ds['tof'] = tofcut
