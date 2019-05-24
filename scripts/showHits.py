@@ -29,12 +29,17 @@ def plotHits(d):
     '''
     hitBuffer(d['image']) #add the image to the hit buffer
     tofBuffer(d['tof']) #add the tof to the hit buffer
-    bestIm(d['image'], np.sum(d['image'])) #add tat the best hit
+   
+    bestIm(d['image'], -np.min(d['tof'])) #add tat the best hit
+    bestTof(d['tof'], -np.min(d['tof'])) #add tat the best hit
     
     hitsFig.plotImBuffer(hitBuffer) #plot up the hits
     tofFig.plotTofBuffer(tofBuffer) #plot up the hits
     
     bestFig.plotImBuffer(bestIm) #plot up the high scores
+    bestTofFig.plotTofBuffer(bestTof) #plot up the high scores
+    
+    lowestTof(-np.min(d['tof'])) #a histogram of tof height
     
     pg.QtGui.QApplication.processEvents() #make sure it displays
  #  print('Photon flux = ', d['phoFlux'])
@@ -46,12 +51,19 @@ imBufferLength = 4
 hitBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
 tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in 
 
+#buffers for highscores
 bestIm = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
+bestTof = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
 
-hitsFig = online.ImBufferPlotter(imBufferLength)
-tofFig = online.TofBufferPlotter(imBufferLength)
-bestFig = online.ImBufferPlotter(imBufferLength)
-#imageViews, imFig = online.makeImageBufferPlots(imBufferLength) #a figure to show that buffer in
+#the plots
+hitsFig = online.ImBufferPlotter(imBufferLength, title='4 newest')
+tofFig = online.TofBufferPlotter(imBufferLength, title='4 newest')
+bestFig = online.ImBufferPlotter(imBufferLength, title='4 brightest')
+bestTofFig = online.TofBufferPlotter(imBufferLength, title='4 brightest')
+
+#a histogram for tof heights
+lowestTof = online.HistogramPlotter(0, 500, 50, title='tof height')
+
 
 def main(source):
     '''
@@ -63,7 +75,8 @@ def main(source):
     '''
        
     ds = online.servedata(source) #get the datastream
-    ds = online.getImageandTof(ds) #get the tofs and images from it
+    ds = online.getTof(ds) #get the tofs 
+    ds = online.getImage(ds) #get the image from it
     
     #get a random piece of data
     ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value')

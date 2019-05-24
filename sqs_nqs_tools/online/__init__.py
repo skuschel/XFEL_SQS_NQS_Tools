@@ -8,7 +8,7 @@ see https://github.com/skuschel/XFELMay2019
 from sqs_nqs_tools.helper import *
 from .generatorpipeline import *
 from .dataaccess import *
-from .bufferPlots import *
+from .plotTools import *
 from .sourceParser import *
 #from .tof import *
 #from .MCP import *

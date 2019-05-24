@@ -46,13 +46,23 @@ def servedata(host, type='REQ'):
 
 
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
-def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], **kwargs):
+def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
     data = d['data']
     meta = d['meta']
-    ret = data[tofDev]['digitizers.channel_1_A.raw.samples']
-    ds['tof'] = np.array(ret[idx_range[0]:idx_range[1]])
+    
+    tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
+    tofcut = np.array(tofraw[idx_range[0]:idx_range[1]])
+    
+    #subtract a baseline if we are using one
+    if baselineTo > 0:
+        d['tof'] = tofcut - np.mean(tofcut[:baselineTo])
+    else:
+        d['tof'] = tofcut
+
     return d
-getTof = gp.pipeline_parallel(1)(_getTof)  # this works
+getTof = gp.pipeline_parallel(defaultConf['dataWorkers'])(_getTof)  # this works
+
+
 
 def _getPulseEnergy(d, energyDev=defaultConf['pulseEDevice']):
     data = d['data']
@@ -61,28 +71,6 @@ def _getPulseEnergy(d, energyDev=defaultConf['pulseEDevice']):
     return d
 getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
-
-@gp.pipeline
-def baselinedTOF(streamdata, downsampleRange=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
-    '''
-    input:
-        streamdata
-        downsampleRange: (int,int) tuple giving range over which to downsmaple TOF
-        baselineTo: gives end index for calculating baseline average
-    output:
-        normalizedTOFTrace: puts tof trace in standard form for analysis
-    Matthew Ware, 2019
-    '''
-    data, meta = streamdata
-    toftrace = data[tofDev]['digitizers.channel_1_A.raw.samples']
-    # Reduce dimension of TOF to span desired range
-    newtof = toftrace[downsampleRange[0]:downsampleRange[1]]
-    N = newtof.size
-    x = np.arange(N)
-
-    # Substract mean of remaining TOF trace and take absolute value
-    newtof_mean = np.mean(newtof[:baselineTo])
-    return newtof - newtof_mean
 
 
 @gp.pipeline
@@ -94,8 +82,8 @@ def getSomeDetector(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput',
 
 @gp.pipeline
 def getImage(d, imDev=defaultConf['imageDevice']):
-    data = ds['data']
-    meta = ds['meta']   
+    data = d['data']
+    meta = d['meta']   
     d['image'] = data[imDev]['data.image.pixels']
     d['tid'] = meta[imDev]['timestamp.tid']
     return d
