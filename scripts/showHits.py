@@ -29,7 +29,7 @@ def plotHits(d):
         None, updates plot window
     '''
     hitBuffer(d['image']) #add the image to the hit buffer
-    online.plotImBuffer(hitBuffer, imageViews) #plot up the hits
+    hitsFig.plotImBuffer(hitBuffer) #plot up the hits
     pg.QtGui.QApplication.processEvents() #make sure it displays
     return d
 #plotHits = online.pipeline_parallel(1)(_plotHits) #if it is to be a pipeline
@@ -37,7 +37,8 @@ def plotHits(d):
 #1. setup some plots and buffers
 imBufferLength = 4
 hitBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
-imageViews, imFig = online.makeImageBufferPlots(imBufferLength) #a figure to show that buffer in
+hitsFig = online.ImBufferPlotter(imBufferLength)
+#imageViews, imFig = online.makeImageBufferPlots(imBufferLength) #a figure to show that buffer in
 
 def main(source):
     '''
