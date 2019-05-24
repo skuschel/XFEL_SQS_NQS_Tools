@@ -61,11 +61,9 @@ class HistogramPlotter():
         self.binWidth = self.bins[1] - self.bins[0]
         
         
-        self.fig = pg.GraphicsWindow()
-        self.fig.setWindowTitle(title)
-        v = self.fig.addPlot()
+        self.fig = pg.plot(title=title)
         self.plot = pg.BarGraphItem(width=self.binWidth*0.8, x=self.bins, height=self.hist)
-        v.addItem(self.plot)
+        self.fig.addItem(self.plot)
         
     def __call__(self, values):
         binned = np.digitize(values, self.bins)

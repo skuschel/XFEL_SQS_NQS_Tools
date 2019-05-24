@@ -27,43 +27,51 @@ def plotHits(d):
     Output:
         None, updates plot window
     '''
-    hitBuffer(d['image']) #add the image to the hit buffer
+ #   hitBuffer(d['image']) #add the image to the hit buffer
     tofBuffer(d['tof']) #add the tof to the hit buffer
    
-    bestIm(d['image'], -np.min(d['tof'])) #add tat the best hit
+ #   bestIm(d['image'], -np.min(d['tof'])) #add tat the best hit
     bestTof(d['tof'], -np.min(d['tof'])) #add tat the best hit
     
-    hitsFig.plotImBuffer(hitBuffer) #plot up the hits
+ #   hitsFig.plotImBuffer(hitBuffer) #plot up the hits
     tofFig.plotTofBuffer(tofBuffer) #plot up the hits
     
-    bestFig.plotImBuffer(bestIm) #plot up the high scores
+ #   bestFig.plotImBuffer(bestIm) #plot up the high scores
     bestTofFig.plotTofBuffer(bestTof) #plot up the high scores
     
     lowestTof(-np.min(d['tof'])) #a histogram of tof height
     
     pg.QtGui.QApplication.processEvents() #make sure it displays
+    
+    tofInt(np.sum(d['tof']))
+    tofPlotInt.plot(tofInt)
+    
  #  print('Photon flux = ', d['phoFlux'])
     return d
 #plotHits = online.pipeline_parallel(1)(_plotHits) #if it is to be a pipeline
 
 #1. setup some plots and buffers
 imBufferLength = 4
-hitBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
+#hitBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
 tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in 
 
 #buffers for highscores
-bestIm = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
+#bestIm = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
 bestTof = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
 
 #the plots
-hitsFig = online.ImBufferPlotter(imBufferLength, title='4 newest')
+#hitsFig = online.ImBufferPlotter(imBufferLength, title='4 newest')
 tofFig = online.TofBufferPlotter(imBufferLength, title='4 newest')
-bestFig = online.ImBufferPlotter(imBufferLength, title='4 brightest')
+#bestFig = online.ImBufferPlotter(imBufferLength, title='4 brightest')
 bestTofFig = online.TofBufferPlotter(imBufferLength, title='4 brightest')
 
 #a histogram for tof heights
 lowestTof = online.HistogramPlotter(0, 500, 50, title='tof height')
 
+
+#integral of tof data
+tofInt = online.DataBuffer(100)
+tofPlotInt = pg.plot(title='ToF Integrals')
 
 def main(source):
     '''
@@ -76,10 +84,10 @@ def main(source):
        
     ds = online.servedata(source) #get the datastream
     ds = online.getTof(ds) #get the tofs 
-    ds = online.getImage(ds) #get the image from it
+ #   ds = online.getImage(ds) #get the image from it
     
     #get a random piece of data
-    ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value')
+ #   ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value')
         
     #3. filter the data for hits
     #TODO

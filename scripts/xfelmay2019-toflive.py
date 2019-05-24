@@ -84,12 +84,12 @@ def main(source, tofbg=None):
 
     for i, tof in enumerate(xfel.getTof(xfel.servedata(source),idx_range=[530000,560000])):
         if tofbg is not None:
-            tof = tof - tofbg
-        plottofavg(tof)
-        plotintegral(tof)
+            tof['tof'] = tof['tof'] - tofbg
+        plottofavg(tof['tof'])
+        plotintegral(tof['tof'])
         if i%100 == 0:
             print('running gc...')
-            print(tof.shape)
+            print(tof['tof'].shape)
             import gc
             gc.collect()
 
