@@ -6,8 +6,8 @@ def plotImBuffer(buf, views):
 	'''
 	plot all the images in a buffer into a list of views
 	'''
-	for i in range(len(buf)):
-		views[i].setImage(buf[i])		
+	for v,b in zip(views, buf):
+		v.setImage(b)		
 
 def makeImageBufferPlots(length):
 	'''

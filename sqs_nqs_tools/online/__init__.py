@@ -15,7 +15,7 @@ from .sourceParser import *
 #from .offlineAccess import *
 #from .clustersize import *
 #from .correlationPlots import *
-from .experimentDefaults import *
+from sqs_nqs_tools.experimentDefaults import *
 #from . import analysis
 
 
