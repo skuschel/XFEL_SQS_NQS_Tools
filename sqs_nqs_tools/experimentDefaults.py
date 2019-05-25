@@ -4,8 +4,8 @@
 defaultConf = dict()
 
 #Define the defaults for all the detector settings
-defaultConf['tofRange'] = [520000,8000000] #the range where interesting data appears
-defaultConf['tofBaseEnd'] = 100 # the first n samples to consider as baseline
+defaultConf['tofRange'] = [0,12000000] #the range where interesting data appears
+defaultConf['tofBaseEnd'] = 1000 # the first n samples to consider as baseline
 
 #device addresses
 defaultConf['imageDevice'] = 'SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput'

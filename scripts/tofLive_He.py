@@ -22,7 +22,7 @@ from pyqtgraph.Qt import QtGui, QtCore
 #    '''
 #    if whatever(d) < thres:
 #        return True
-
+ 
 @online.pipeline
 def foldTofs(d):
     '''
@@ -56,12 +56,14 @@ def plotHits(d):
     lowestTof(-np.min(d['tof'])) #a histogram of tof height
     avgTof(d['tof']) #the average tof
     
-    tofFig.plotTofBuffer(tofBuffer) #plot up the hits
+    #n += 1
+    if tofInt.n%1 == 0:
+        tofFig.plotTofBuffer(tofBuffer) #plot up the hits
  #  bestTofFig.plotTofBuffer(bestTof) #plot up the high scores
-    avgPlot.plotTofBuffer(avgTof)
+        avgPlot.plotTofBuffer(avgTof)
     
     tofInt(np.sum(d['tof'])) #make that integral plot
-    tofPlotInt.plot(tofInt)
+    tofPlotInt.setData(np.asarray(tofInt))
     
     pg.QtGui.QApplication.processEvents() #make sure it displays
     return d
@@ -84,9 +86,9 @@ tofFig = online.TofBufferPlotter(imBufferLength, title='4 newest')
 lowestTof = online.HistogramPlotter(0, 500, 50, title='tof height')
 
 #integral of tof data
-tofInt = online.DataBuffer(100)
-tofPlotInt = pg.plot(title='ToF Integrals')
-    
+tofInt = online.DataBuffer(1000)
+intWin = win = pg.GraphicsWindow()
+tofPlotInt = intWin.addPlot(title='ToF Integrals').plot()
 
         
 def main(source):
@@ -104,7 +106,7 @@ def main(source):
 
     ds = online.servedata(source) #get the datastream
     ds = online.getTof(ds) #get the tofs 
-    ds = foldTofs(ds) #fold tofs from shots in the pulsetrain
+#    ds = foldTofs(ds) #fold tofs from shots in the pulsetrain
 #   ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value') #get a random piece of data
     
     for data in ds: #this could be made into a pipeline maybe
