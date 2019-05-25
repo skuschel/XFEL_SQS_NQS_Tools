@@ -6,10 +6,9 @@ from . import access
 
 raw_dir = '/gpfs/exfel/exp/SQS/201802/p002195/raw/'
 
-def getTOF( runNumber, path=raw_dir, tofrange=(260000,285000), 
+def getTOF( runNumber, path=raw_dir, fullrange = False, tofrange=(260000,285000), 
               dirspec='SQS_DIGITIZER_UTC1/ADC/1:network', 
-              elementspec='digitizers.channel_1_A.raw.samples', 
-              correctionRange=(400000,400032) ):
+              elementspec='digitizers.channel_1_A.raw.samples'):
     # note renamed from getRunTOF
     '''
     gets TOF data for a given run 
@@ -25,15 +24,24 @@ def getTOF( runNumber, path=raw_dir, tofrange=(260000,285000),
 
     data = access.getData(access.runDir( runNumber , path=path), dirspec, elementspec)
     
-    pixels = np.arange(tofrange[0],tofrange[1])
     
-    correction = np.mean( np.asarray(data)[ : , correctionRange[0]:correctionRange[1] ], 0)
-    corrpixels = np.arange(correctionRange[0],correctionRange[1])
     
+    # correction will be made available as function in tof.py
+    # correctionRange=(400000,400032) 
+    #correction = np.mean( np.asarray(data)[ : , correctionRange[0]:correctionRange[1] ], 0)
+    #corrpixels = np.arange(correctionRange[0],correctionRange[1])
     #tofdata=correctTOF(np.asarray(data)[ : , tofrange[0]:tofrange[1] ], pixels, correction, corrpixels)
-    tofdata = np.asarray(data)[ : , tofrange[0]:tofrange[1] ]
-    trainIds = np.asarray(data.trainId)
-    return trainIds, tofdata, pixels
+    
+    # I don't see a reason to put xarray structure into 2 variables - so don't do it
+    # tofdata = np.asarray(data)[ : , tofrange[0]:tofrange[1] ]
+    # trainIds = np.asarray(data.trainId)
+    if not fullrange:
+        pixels = np.arange(tofrange[0],tofrange[1])
+        tofdata = data[ : , tofrange[0]:tofrange[1] ]
+    else:
+        pixels = np.arange(0,data.shape[1])
+        tofdata = data
+    return tofdata, pixels
 
 def getPulseEnergies( run , path=raw_dir , devicePath='SA3_XTD10_XGM/XGM/DOOCS:output', dataPath='data.intensityTD'):
     '''
