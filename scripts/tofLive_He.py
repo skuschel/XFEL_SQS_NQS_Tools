@@ -54,15 +54,15 @@ def plotHits(d):
     tofBuffer(d['tof']) #add the tof to the hit buffer
     bestTof(d['tof'], -np.min(d['tof'])) #add tat the best hit
     lowestTof(-np.min(d['tof'])) #a histogram of tof height
-    avgTof(d['tof']) #the average tof
+    avgTof(d['tof'].flatten()) #the average tof
     
     #n += 1
-    if tofInt.n%1 == 0:
-        tofFig.plotTofBuffer(tofBuffer) #plot up the hits
+#    if tofInt.n%1 == 0:
+#        tofFig.plotTofBuffer(tofBuffer) #plot up the hits
  #  bestTofFig.plotTofBuffer(bestTof) #plot up the high scores
-        avgPlot.plotTofBuffer(avgTof)
+#        avgPlot.plotTofBuffer(avgTof)
     
-    tofInt(np.sum(d['tof'])) #make that integral plot
+    tofInt(-np.min(d['tof'])) #make that integral plot
     tofPlotInt.setData(np.asarray(tofInt))
     
     pg.QtGui.QApplication.processEvents() #make sure it displays
@@ -75,15 +75,16 @@ tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in
 #buffers for highscores
 bestTof = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
 
-avgTof = tools.Accumulator()
-avgPlot = online.TofBufferPlotter(1, 'average ToF')
+avNum = 30
+avgTof = tools.RollingAverage(avNum)
+avgPlot = online.TofBufferPlotter(1, '{} ToF rolling average'.format(avNum))
 
 #the plots
-tofFig = online.TofBufferPlotter(imBufferLength, title='4 newest')
+tofFig = online.TofBufferPlotter(imBufferLength, title='Latest ToF')
 #bestTofFig = online.TofBufferPlotter(imBufferLength, title='4 brightest')
 
 #a histogram for tof heights
-lowestTof = online.HistogramPlotter(0, 500, 50, title='tof height')
+lowestTof = online.HistogramPlotter(0, 2000, 100, title='tof height')
 
 #integral of tof data
 tofInt = online.DataBuffer(1000)

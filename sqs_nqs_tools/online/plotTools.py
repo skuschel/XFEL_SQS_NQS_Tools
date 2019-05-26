@@ -55,9 +55,9 @@ class TofBufferPlotter():
                 plot all the images in a buffer into this figure
         '''     
         for p,b,v in zip(self.plots, buf, self.plotViews):
-            p.setData(np.asarray(np.squeeze(b)))
+            p.setData(np.asarray(b).flatten())
             if self.firstRun:
-                v.disableAutoRange()
+      #          v.disableAutoRange()
                 v.setClipToView(True)
             self.firstRun = False   
 
@@ -67,7 +67,7 @@ class TofBufferPlotter():
 class HistogramPlotter():
     def __init__(self, start, stop, nBins, title='histogram'):
         self.bins = np.linspace(start, stop, nBins)
-        self.hist = np.zeros(nBins)
+        self.hist = np.zeros(nBins+1)
         self.binWidth = self.bins[1] - self.bins[0]
         
         

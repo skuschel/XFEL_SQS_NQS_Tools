@@ -38,7 +38,7 @@ def servedata(host, type='REQ'):
 
     # Return the newest event in the datastream using an iterator construct
     for ret in c:
-    	yield {'data':ret[0], 'meta':ret[1]} #it comes out as a dict so the we have a consistent datastream
+        yield {'data':ret[0], 'meta':ret[1]} #it comes out as a dict so the we have a consistent datastream
 
 
 
@@ -53,11 +53,20 @@ def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'
     tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     tofcut = np.array(tofraw[idx_range[0]:idx_range[1]])
     
+
+ #   if baselineTo > 0:
+ #       d['tof'] = tofcut - np.mean(tofcut[:baselineTo])
+ #   else:
+ #       d['tof'] = tofcut
+
+    #subtract channel offsets
     #subtract a baseline if we are using one
+    nChan = defaultConf['tofChannels']
     if baselineTo > 0:
-        d['tof'] = tofcut - np.mean(tofcut[:baselineTo])
-    else:
-        d['tof'] = tofcut
+        for c in range(nChan):
+            tofcut[c::nChan] = tofcut[c::nChan] - np.mean(tofcut[c:baselineTo:nChan])
+        
+    d['tof'] = tofcut
 
     return d
 getTof = gp.pipeline_parallel(defaultConf['dataWorkers'])(_getTof)  # this works
