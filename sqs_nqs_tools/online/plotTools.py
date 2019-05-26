@@ -29,7 +29,7 @@ class ImBufferPlotter():
         plot all the images in a buffer into this figure
         '''
         for v,b in zip(self.views, buf):
-            v.setImage(b)		
+            v.setImage(b)               
             
 class TofBufferPlotter():
     def __init__(self, length, title='Tof plot'):
@@ -43,15 +43,25 @@ class TofBufferPlotter():
         self.fig = pg.GraphicsWindow()
         self.fig.setWindowTitle(title)
         self.plots = []
+        self.plotViews = []
+        self.firstRun = True  
         for i in range(length):
-            self.plots.append(self.fig.addPlot(row=0, col=i).plot())
+            self.plotViews.append(self.fig.addPlot(row=0, col=i))
+            self.plotViews[-1].setDownsampling(ds=10000, auto=True, mode='peak')
+            self.plots.append(self.plotViews[-1].plot())
 
     def plotTofBuffer(self, buf):
         '''
-		plot all the images in a buffer into this figure
-        '''	
-        for p,b in zip(self.plots, buf):
-            p.setData(np.asarray(np.squeeze(b)))		
+                plot all the images in a buffer into this figure
+        '''     
+        for p,b,v in zip(self.plots, buf, self.plotViews):
+            p.setData(np.asarray(np.squeeze(b)))
+            if self.firstRun:
+                v.disableAutoRange()
+                v.setClipToView(True)
+            self.firstRun = False   
+
+                
 
 #easy plotting of histograms
 class HistogramPlotter():
