@@ -20,12 +20,12 @@ from functools import partial
 from threading import Thread
 from tornado import gen
 
-import numpy as np
-import pandas as pd
-import holoviews as hv
-from holoviews import dim, opts
+#import numpy as np
+#import pandas as pd
+#import holoviews as hv
+#from holoviews import dim, opts
 
-hv.extension('bokeh')
+#hv.extension('bokeh')
 
 ## just for sample code
 from random import random
@@ -58,34 +58,71 @@ def update(x,y,tid):
     d_src_tof.patch(patches_tof)
     #d_src_text.patch(patches_text)
 
-# Function That waits for and processes the live data    
+# Function That waits for and processes the live data  
+@online.pipeline 
+def foldTofs(d):
+    '''
+    fold all the tofs from a train into a singal tof
+    '''
+    
+   
+   
+    d['tof'] = d['tof'][200000:200000+N_datapts]
+    return d
+    
 def makeSomeData():
     source = 'tcp://10.253.0.142:6666'
-    source = 'tcp://127.0.0.1:8001'
+    #source = 'tcp://127.0.0.1:8001'
     ds = online.servedata(source) #get the datastream
     ds = online.getTof(ds) #get the tofs
+    ds = foldTofs(ds)
     print("get some detector")
-    ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.channel_1_A.apd.pulseId')
+    ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId')
     print("done")
     # initialize variables for performance monitoring
-    t_start = 0
+    t_start = time.time()
     for_loop_step_dur = 0
+    n=-1
+    freq_avg = 0
+    dt_avg = 0
+    trainId = 0
+    trainId_old = -1
+    skip_count = 0
     # start with for loop
     print("Start With For Loop")
     for data in ds:
-	# performance monitor - frequency of displaying data + loop duration
-        print("Frequency: "+str(round(1/(time.time()-t_start),2))+ " Hz  |  Loop duration vs allowed duration: "+str(round(for_loop_step_dur/0.1*100,1))+ " % (OK if <100%)") 
+    # performance monitor - frequency of displaying data + loop duration
+        n+=1
+        dt = (time.time()-t_start)
         t_start = time.time()
+        freq = 1/dt
+        if n>0:
+            dt_avg = (dt_avg * (n-1) + dt) / n
+            freq_avg = 1/dt_avg
+            loop_classification_percent = for_loop_step_dur/0.1*100
+            if loop_classification_percent < 100:
+                loop_classification_msg="OK"
+            else:
+                loop_classification_msg="TOO LONG!!!"
+            print("Frequency: "+str(round(freq_avg,2)) +" Hz  |  skipped: "+str(skip_count)+" ( "+str(round(skip_count/n*100,1))+" %)  |  n: "+str(n)+"/"+str(trainId)+"  |  Loop benchmark: "+str(round(loop_classification_percent,1))+ " % (OK if <100%) - "+loop_classification_msg) 
         
+        t_1 = time.time()
         # extract TOF data
-        tof = data['tof']
-        tof = tof[200000:200000+N_datapts]
+        #tof = data['tof']
+        t_2 = time.time()
+        #tof = tof[200000:200000+N_datapts]
         # print(tof.shape)    # just in case debugging because of shape errors
-        N_samples = len(tof)
-        x = np.arange(N_samples); y = np.squeeze(tof)
+        #N_samples = len(tof)
+        #print(data['tof'].shape)
+        x = np.arange(N_datapts); y = np.squeeze(data['tof'])
+        t_3 = time.time()
         
         # Train ID Data
+        trainId_old = trainId
         trainId = str(data['tid'])
+        if int(trainId) - int(trainId_old) is not 1:
+            #print('SKIP')
+            skip_count +=1
         
         # update from callback
         doc.add_next_tick_callback(partial(update, x=x, y=y,tid=trainId))
