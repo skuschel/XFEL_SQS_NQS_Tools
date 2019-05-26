@@ -66,7 +66,7 @@ def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'
         for c in range(nChan):
             tofcut[c::nChan] = tofcut[c::nChan] - np.mean(tofcut[c:baselineTo:nChan])
         
-    d['tof'] = tofcut
+    d['tof'] = (tofcut)
 
     return d
 getTof = gp.pipeline_parallel(defaultConf['dataWorkers'])(_getTof)  # this works

@@ -55,7 +55,6 @@ def plotHits(d):
     #add tat the best hit
     lowestTof(-np.min(d['tof'])) #a histogram of tof height
     avgTof(d['tof'].flatten()) #the average tof
-    
 #    print(np.sum((np.max(np.asarray(tofBuffer), axis=1)) > 1000))
     hitBuf(np.sum((np.max(np.asarray(tofBuffer), axis=1)) > 1400))
     
@@ -99,9 +98,9 @@ intWin = win = pg.GraphicsWindow()
 tofPlotInt = intWin.addPlot(title='ToF Integrals').plot()
 
 #integral of hit rate
-hitBuf = online.DataBuffer(1000)
+hitBuf = online.DataBuffer(50000)
 hitWin = win = pg.GraphicsWindow()
-hitBufPlot = intWin.addPlot(title='Hits in last {} shots'.format(imBufferLength)).plot()
+hitBufPlot = hitWin.addPlot(title='Hits in last {} shots'.format(imBufferLength)).plot()
 
         
 def main(source):

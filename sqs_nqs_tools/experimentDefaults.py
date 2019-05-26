@@ -4,7 +4,7 @@
 defaultConf = dict()
 
 #Define the defaults for all the detector settings
-defaultConf['tofRange'] = [142000,12000000] #the range where interesting data appears
+defaultConf['tofRange'] = [142000,600000] #the range where interesting data appears 142000
 defaultConf['tofBaseEnd'] = 500 # the first n samples to consider as baseline
 defaultConf['tofChannels'] = 8 #the number of simultaneous channels in the Tof
 
