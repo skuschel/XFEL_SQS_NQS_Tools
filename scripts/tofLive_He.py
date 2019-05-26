@@ -51,10 +51,17 @@ def plotHits(d):
     Output:
         None, updates plot window
     '''
-    tofBuffer(d['tof']) #add the tof to the hit buffer
-    bestTof(d['tof'], -np.min(d['tof'])) #add tat the best hit
+    tofBuffer(-d['tof']) #add the tof to the hit buffer
+    #add tat the best hit
     lowestTof(-np.min(d['tof'])) #a histogram of tof height
     avgTof(d['tof'].flatten()) #the average tof
+    
+#    print(np.sum((np.max(np.asarray(tofBuffer), axis=1)) > 1000))
+    hitBuf(np.sum((np.max(np.asarray(tofBuffer), axis=1)) > 1400))
+    
+    if (-np.min(d['tof']) > 1400):
+        bestTof(d['tof'])
+        bestTofFig.plotTofBuffer(bestTof)
     
     #n += 1
 #    if tofInt.n%1 == 0:
@@ -64,32 +71,37 @@ def plotHits(d):
     
     tofInt(-np.min(d['tof'])) #make that integral plot
     tofPlotInt.setData(np.asarray(tofInt))
-    
+    hitBufPlot.setData(np.asarray(hitBuf))
     pg.QtGui.QApplication.processEvents() #make sure it displays
     return d
 
 #1. setup some plots and buffers
-imBufferLength = 1
+imBufferLength = 50
 tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in 
 
 #buffers for highscores
-bestTof = tools.SortedBuffer(imBufferLength) #a buffer to store the brightest 
+bestTof = tools.DataBuffer(1) #a buffer to store the brightest 
 
 avNum = 30
 avgTof = tools.RollingAverage(avNum)
-avgPlot = online.TofBufferPlotter(1, '{} ToF rolling average'.format(avNum))
+#avgPlot = online.TofBufferPlotter(1, '{} ToF rolling average'.format(avNum))
 
 #the plots
-tofFig = online.TofBufferPlotter(imBufferLength, title='Latest ToF')
-#bestTofFig = online.TofBufferPlotter(imBufferLength, title='4 brightest')
+#tofFig = online.TofBufferPlotter(imBufferLength, title='Latest ToF')
+bestTofFig = online.TofBufferPlotter(1, title='hit ToF')
 
 #a histogram for tof heights
-lowestTof = online.HistogramPlotter(0, 2000, 100, title='tof height')
+lowestTof = online.HistogramPlotter(0, 4000, 100, title='tof height')
 
 #integral of tof data
 tofInt = online.DataBuffer(1000)
 intWin = win = pg.GraphicsWindow()
 tofPlotInt = intWin.addPlot(title='ToF Integrals').plot()
+
+#integral of hit rate
+hitBuf = online.DataBuffer(1000)
+hitWin = win = pg.GraphicsWindow()
+hitBufPlot = intWin.addPlot(title='Hits in last {} shots'.format(imBufferLength)).plot()
 
         
 def main(source):
