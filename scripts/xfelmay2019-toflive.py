@@ -82,7 +82,7 @@ def main(source, tofbg=None):
         tofbg = np.load(tofbg)['arr_0'][262000:290000]
         print('tofbg average is {}'.format(np.mean(tofbg)))
 
-    for i, tof in enumerate(xfel.getTof(xfel.servedata(source),idx_range=[530000,560000])):
+    for i, tof in enumerate(xfel.getTof(xfel.servedata(source),idx_range=[100000,500000])):
         if tofbg is not None:
             tof['tof'] = tof['tof'] - tofbg
         plottofavg(tof['tof'])
