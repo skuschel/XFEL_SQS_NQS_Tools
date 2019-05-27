@@ -1,12 +1,13 @@
 # IMPORT MODULES
 import time
 import numpy as np
+import pandas as pd
 import holoviews as hv
 import datashader as ds
 from holoviews.operation.datashader import datashade
 
 from holoviews import opts
-from holoviews.streams import Pipe, RangeXY, PlotSize
+from holoviews.streams import Pipe, RangeXY, PlotSize, Buffer
 import holoviews.plotting.bokeh
 from tornado import gen
 
@@ -39,8 +40,8 @@ x_tof = np.arange(start_tof,end_tof) # x-axis for tof data points
 
 # Data handling functions
 @gen.coroutine
-def update_pipe(x,y):
-    _pipe__TOF_single.send((x,y))
+def update_pipe(x,y,pipe):
+    pipe.send((x,y))
 
 @online.pipeline
 def processTofs(d):
@@ -106,15 +107,23 @@ def makeBigData():
     
     perf = performanceMonitor() # outputs to console info on performance - eg what fraction of data was not pulled from live stream and thus missed
     
+    n=-1
     for data in ds:
+        n+=1
         # performance monitor - frequency of displaying data + loop duration
         perf.iteration()
         # Hand Data from datastream to plots and performance monitor
-        # TOF
+        # TOF trace
         x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
-        doc.add_next_tick_callback(partial(update_pipe, x=x, y=y))
+        doc.add_next_tick_callback(partial(update_pipe, x=x, y=y, pipe=_pipe__TOF_single))
+        # TOF integral
+        integral_tof = abs(np.sum(data['tof']))
+        _SQSbuffer__TOF_integral(integral_tof)
+        doc.add_next_tick_callback(partial(_buffer__TOF_integral.send, pd.DataFrame([(n,integral_tof)], columns=['x','y'])))
         # TrainId
         trainId = str(data['tid'])
+        
+        
         
         perf.update_trainId(trainId) # give current train id to performance monitor for finding skipping of shots
         perf.time_for_loop_step() # tell performance monitor that this is the end of the for loop
@@ -126,29 +135,42 @@ def hv_to_bokeh_obj(hv_layout):
     return hv_plot.state
     
 # plot tools functions
-def largeData_line_plot(pipe, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
-    TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe])
+def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
+    TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer])
     TOF_dmap_opt = datashade(TOF_dmap, streams=[PlotSize, RangeXY], dynamic=True, cmap = cmap)
     return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title) )
     
+def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", title=None):
+    TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range()#.opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
+    return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
+print("...1")
+# Data Buffers for DataLiveStream
+_SQSbuffer__TOF_integral = online.DataBuffer(1000)
 
+print("...2")
 # Data pipes and buffers for plots
+## pipes provide a full update of data to the underlying object eg. plot
+## buffers add only a single value to the plot and may kick one out when number of elements in the buffer has reached the length/size of the buffer
 _pipe__TOF_single = Pipe(data=[])
+_pipe__TOF_integral = Pipe(data=[])
+_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
    
 # SETUP PLOTS
-
+print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
 bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") 
 bokeh_live_tof_duplicate = largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", cmap=["red"])
 
-# SET UP BOKEH LAYOUT
-bokeh_layout = column(bokeh_live_tof,bokeh_live_tof_duplicate)
+bokeh_buffer_tof_integral = smallData_line_plot(_buffer__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
 
+# SET UP BOKEH LAYOUT
+bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral),bokeh_live_tof_duplicate)
+print("...4")
 # add bokeh layout to current doc
 doc.add_root(bokeh_layout)
-
+print("...5")
 # Start Thread for Handling of the Live Data Strem
 thread = Thread(target=makeBigData)
 thread.start()
