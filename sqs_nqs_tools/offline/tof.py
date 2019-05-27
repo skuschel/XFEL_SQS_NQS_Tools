@@ -27,9 +27,10 @@ def plotTOF( pixels, tof, xlabel='pixels' ):
             plot of tof data   
     '''
     plt.plot( pixels, tof )
-    plt.ylim( 0, np.min(tof) )
+    plt.ylim( np.max(tof), np.min(tof) )
     plt.xlabel( xlabel )
     plt.ylabel( 'TOF ' )
+    plt.show()
 
 def plotVerticalLine( xpos, scale = 1e6, color='k', label=None ):
     '''

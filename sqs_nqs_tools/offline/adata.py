@@ -43,7 +43,7 @@ def getTOF( runNumber, path=raw_dir, fullrange = False, tofrange=(260000,285000)
         tofdata = data
     return tofdata, pixels
 
-def getPulseEnergies( run , path=raw_dir , devicePath='SA3_XTD10_XGM/XGM/DOOCS:output', dataPath='data.intensityTD'):
+def getPulseEnergies( run , path=raw_dir , devicePath='SA3_XTD10_XGM/XGM/DOOCS:output', dataPath='data.intensitySa3TD'):
     '''
         Returns pulse energy
         BE WARY OF THIS FUNCTION!!!! Might not return true PE depending on train settings.
@@ -53,9 +53,9 @@ def getPulseEnergies( run , path=raw_dir , devicePath='SA3_XTD10_XGM/XGM/DOOCS:o
     data = access.getData(access.runDir( run , path=path), devicePath, dataPath)
     dataArray = np.asarray( data )
     PID = np.argmin( np.abs( dataArray[0,:]-1 ) )
-    
-    trainIds = np.asarray(data.trainId)
-    return trainIds, np.asarray(data[:,PID-1])
+
+    #return data[:,PID-1]
+    return data[:,:]
 
 def getChamberHeight( run , path=raw_dir , devicePath='SQS_AQS_MOV/MOTOR/Y_DOWNSTR', dataPath='actualPosition.value' ):
     

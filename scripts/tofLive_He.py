@@ -75,7 +75,7 @@ def plotHits(d):
     return d
 
 #1. setup some plots and buffers
-imBufferLength = 50
+imBufferLength = 2
 tofBuffer = tools.DataBuffer(imBufferLength) #a buffer to store hits in 
 
 #buffers for highscores
@@ -86,7 +86,7 @@ avgTof = tools.RollingAverage(avNum)
 #avgPlot = online.TofBufferPlotter(1, '{} ToF rolling average'.format(avNum))
 
 #the plots
-#tofFig = online.TofBufferPlotter(imBufferLength, title='Latest ToF')
+tofFig = online.TofBufferPlotter(imBufferLength, title='Latest ToF')
 bestTofFig = online.TofBufferPlotter(1, title='hit ToF')
 
 #a histogram for tof heights
