@@ -10,9 +10,11 @@ from holoviews import opts
 from holoviews.streams import Pipe, RangeXY, PlotSize, Buffer
 import holoviews.plotting.bokeh
 from tornado import gen
+import tornado
 
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import column, row
+from bokeh.document import without_document_lock
 from functools import partial
 
 from threading import Thread
@@ -28,8 +30,8 @@ hv.output(dpi=300, size=100)
 doc = curdoc()  # DOC for Bokeh Objects
 
 # DATA SOURCE
-#source = 'tcp://10.253.0.142:6666'  # LIVE
-source = 'tcp://127.0.0.1:8011' # emulated live
+source = 'tcp://10.253.0.142:6666'  # LIVE
+#source = 'tcp://127.0.0.1:8011' # emulated live
 
 # DATA CONFIG
 N_datapts = 400000 # total number of TOF datapoints that are visualized
@@ -115,12 +117,19 @@ def makeBigData():
         # Hand Data from datastream to plots and performance monitor
         # TOF trace
         x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
-        data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ) )
+        if 'tof_trace_next_tick_callback' in locals():
+            if tof_trace_next_tick_callback in doc.session_callbacks:
+                doc.remove_next_tick_callback(tof_trace_next_tick_callback)
+        tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ) )
         # TOF integral
         integral_tof = abs(np.sum(data['tof']))
-        data_into_buffer_or_pipe( _buffer__TOF_integral,  pd_data_xy( n , integral_tof ) )
+        if 'tof_integral_next_tick_callback' in locals():
+            if tof_integral_next_tick_callback in doc.session_callbacks:
+                doc.remove_next_tick_callback(tof_integral_next_tick_callback)
+        tof_integral_next_tick_callback = data_into_buffer_or_pipe( _buffer__TOF_integral,  pd_data_xy( n , integral_tof ) )
         # TrainId
         trainId = str(data['tid'])
+        
         
         #pd.DataFrame([(n,integral_tof)], columns=['x','y'])
         
@@ -138,9 +147,17 @@ def pd_data_xy(x,y):
     # generates a pd dataframe (special data structure that holoviews likes) with x y data in the columns x and y
     return pd.DataFrame([(x,y)], columns=['x','y'])
 
-def data_into_buffer_or_pipe(buffer_or_pipe, data):
+def data_into_buffer_or_pipe(buffer_or_pipe, data, initial = False):
     # pushes new data into pipe or buffer
-    doc.add_next_tick_callback(partial(buffer_or_pipe.send, data))
+    #doc.add_next_tick_callback(partial(buffer_or_pipe.send, data))
+    #tornado.ioloop.IOLoop.instance().add_callback(partial(buffer_or_pipe.send, data))
+    next_tick_callback = doc.add_next_tick_callback(partial(test_func,buffer_or_pipe,data))
+    return next_tick_callback
+    
+@without_document_lock
+def test_func(buffer_or_pipe,data):
+    print("Called Test Func")  
+    buffer_or_pipe.send(data)  
     
 # plot tools functions
 def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
@@ -166,12 +183,12 @@ print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
 bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") 
-bokeh_live_tof_duplicate = largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", cmap=["red"])
+#bokeh_live_tof_duplicate = largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", cmap=["red"])
 
 bokeh_buffer_tof_integral = smallData_line_plot(_buffer__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
 
 # SET UP BOKEH LAYOUT
-bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral),bokeh_live_tof_duplicate)
+bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral))
 print("...4")
 # add bokeh layout to current doc
 doc.add_root(bokeh_layout)
