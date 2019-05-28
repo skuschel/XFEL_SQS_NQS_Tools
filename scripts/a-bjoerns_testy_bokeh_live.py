@@ -31,7 +31,7 @@ from tornado import gen
 from random import random
 
 print("i")
-N_datapts = 100000
+N_datapts = 1000
 print("i")
 # Setup Data Source for Live Updates
 d_src_tof = ColumnDataSource(data=dict(x=np.zeros(N_datapts), y=np.zeros(N_datapts)))#, tid='init'))
@@ -72,7 +72,7 @@ def foldTofs(d):
     
 def makeSomeData():
     source = 'tcp://10.253.0.142:6666'
-    #source = 'tcp://127.0.0.1:8001'
+    source = 'tcp://127.0.0.1:8010'
     ds = online.servedata(source) #get the datastream
     ds = online.getTof(ds) #get the tofs
     ds = foldTofs(ds)

@@ -2,6 +2,7 @@
 
 # quick and ditry script to just show hits
 # based on work by Stephan Kuschel, Matt Ware, Catherine Saladrigas, Christian Peltz 2019
+import time as t
 
 import numpy as np
 import pyqtgraph as pg
@@ -108,9 +109,14 @@ def main(source):
     ds = online.getTof(ds) #get the tofs 
 #    ds = foldTofs(ds) #fold tofs from shots in the pulsetrain
 #   ds = online.getSomeDetector(ds, name='phoFlux', spec0='SA3_XTD10_XGM/XGM/DOOCS', spec1='pulseEnergy.photonFlux.value') #get a random piece of data
-    
+    t_0 = t.time()
+    t.sleep(0.01)
+    t_1 = t.time()
     for data in ds: #this could be made into a pipeline maybe
+        print([t.time() - t_0, t_1 - t_0])
+        t_0 = t.time()
         plotHits(data)    
+        t_1 = t.time()
 
 if __name__=='__main__':
     #parse args and fire main

@@ -115,15 +115,14 @@ def makeBigData():
         # Hand Data from datastream to plots and performance monitor
         # TOF trace
         x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
-        doc.add_next_tick_callback(partial(update_pipe, x=x, y=y, pipe=_pipe__TOF_single))
+        data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ) )
         # TOF integral
         integral_tof = abs(np.sum(data['tof']))
-        _SQSbuffer__TOF_integral(integral_tof)
-        doc.add_next_tick_callback(partial(_buffer__TOF_integral.send, pd.DataFrame([(n,integral_tof)], columns=['x','y'])))
+        data_into_buffer_or_pipe( _buffer__TOF_integral,  pd_data_xy( n , integral_tof ) )
         # TrainId
         trainId = str(data['tid'])
         
-        
+        #pd.DataFrame([(n,integral_tof)], columns=['x','y'])
         
         perf.update_trainId(trainId) # give current train id to performance monitor for finding skipping of shots
         perf.time_for_loop_step() # tell performance monitor that this is the end of the for loop
@@ -131,8 +130,17 @@ def makeBigData():
 
 # Helper to convert from holoviews to bokeh
 def hv_to_bokeh_obj(hv_layout):
+    # convert holoviews layout to bokeh object
     hv_plot = renderer.get_plot(hv_layout) 
     return hv_plot.state
+
+def pd_data_xy(x,y):
+    # generates a pd dataframe (special data structure that holoviews likes) with x y data in the columns x and y
+    return pd.DataFrame([(x,y)], columns=['x','y'])
+
+def data_into_buffer_or_pipe(buffer_or_pipe, data):
+    # pushes new data into pipe or buffer
+    doc.add_next_tick_callback(partial(buffer_or_pipe.send, data))
     
 # plot tools functions
 def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
@@ -144,16 +152,13 @@ def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),x
     TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range()#.opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
     return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
-print("...1")
-# Data Buffers for DataLiveStream
-_SQSbuffer__TOF_integral = online.DataBuffer(1000)
+
 
 print("...2")
 # Data pipes and buffers for plots
 ## pipes provide a full update of data to the underlying object eg. plot
 ## buffers add only a single value to the plot and may kick one out when number of elements in the buffer has reached the length/size of the buffer
 _pipe__TOF_single = Pipe(data=[])
-_pipe__TOF_integral = Pipe(data=[])
 _buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
    
 # SETUP PLOTS
