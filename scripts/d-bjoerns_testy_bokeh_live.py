@@ -123,10 +123,12 @@ def makeBigData():
         tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ) )
         # TOF integral
         integral_tof = abs(np.sum(data['tof']))
+        _SQSbuffer__TOF_integral(integral_tof)
         if 'tof_integral_next_tick_callback' in locals():
             if tof_integral_next_tick_callback in doc.session_callbacks:
                 doc.remove_next_tick_callback(tof_integral_next_tick_callback)
-        tof_integral_next_tick_callback = data_into_buffer_or_pipe( _buffer__TOF_integral,  pd_data_xy( n , integral_tof ) )
+        print(_SQSbuffer__TOF_integral.data)
+        tof_integral_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_integral,  ( n , _SQSbuffer__TOF_integral.data ) )
         # TrainId
         trainId = str(data['tid'])
         
@@ -170,13 +172,17 @@ def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),x
     return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
 
+# Data buffers for live stream
 
+_SQSbuffer__TOF_integral = online.DataBuffer(100)
 print("...2")
+
 # Data pipes and buffers for plots
 ## pipes provide a full update of data to the underlying object eg. plot
 ## buffers add only a single value to the plot and may kick one out when number of elements in the buffer has reached the length/size of the buffer
 _pipe__TOF_single = Pipe(data=[])
-_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
+#_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
+_pipe__TOF_integral = Pipe(data=[])
    
 # SETUP PLOTS
 print("...3")
@@ -185,7 +191,8 @@ print("...3")
 bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") 
 #bokeh_live_tof_duplicate = largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", cmap=["red"])
 
-bokeh_buffer_tof_integral = smallData_line_plot(_buffer__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
+#bokeh_buffer_tof_integral = smallData_line_plot(_buffer__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
+bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
 
 # SET UP BOKEH LAYOUT
 bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral))
