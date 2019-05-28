@@ -34,7 +34,7 @@ source = 'tcp://10.253.0.142:6666'  # LIVE
 #source = 'tcp://127.0.0.1:8011' # emulated live
 
 # DATA CONFIG
-N_datapts = 400000 # total number of TOF datapoints that are visualized
+N_datapts = 10000 # total number of TOF datapoints that are visualized
 start_tof = 130000 # index of first TOF datapoint considered
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
@@ -120,15 +120,17 @@ def makeBigData():
         if 'tof_trace_next_tick_callback' in locals():
             if tof_trace_next_tick_callback in doc.session_callbacks:
                 doc.remove_next_tick_callback(tof_trace_next_tick_callback)
-        tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ) )
+        tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ), n )
         # TOF integral
         integral_tof = abs(np.sum(data['tof']))
         _SQSbuffer__TOF_integral(integral_tof)
+        _SQSbuffer__counter(n)
         if 'tof_integral_next_tick_callback' in locals():
             if tof_integral_next_tick_callback in doc.session_callbacks:
                 doc.remove_next_tick_callback(tof_integral_next_tick_callback)
-        print(_SQSbuffer__TOF_integral.data)
-        tof_integral_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_integral,  ( n , _SQSbuffer__TOF_integral.data ) )
+            else:
+                print(_SQSbuffer__counter.data)
+        tof_integral_next_tick_callback = data_into_buffer_or_pipe(_pipe__TOF_integral,  ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data ), n )
         # TrainId
         trainId = str(data['tid'])
         
@@ -149,18 +151,29 @@ def pd_data_xy(x,y):
     # generates a pd dataframe (special data structure that holoviews likes) with x y data in the columns x and y
     return pd.DataFrame([(x,y)], columns=['x','y'])
 
-def data_into_buffer_or_pipe(buffer_or_pipe, data, initial = False):
+def data_into_buffer_or_pipe(buffer_or_pipe, data,n):
     # pushes new data into pipe or buffer
     #doc.add_next_tick_callback(partial(buffer_or_pipe.send, data))
     #tornado.ioloop.IOLoop.instance().add_callback(partial(buffer_or_pipe.send, data))
-    next_tick_callback = doc.add_next_tick_callback(partial(test_func,buffer_or_pipe,data))
+    next_tick_callback = doc.add_next_tick_callback(partial(test_func,buffer_or_pipe,data,n))
+    return next_tick_callback
+    
+def data_into_buffer_or_pipe_debug(buffer_or_pipe, data, n):
+    # pushes new data into pipe or buffer
+    #doc.add_next_tick_callback(partial(buffer_or_pipe.send, data))
+    #tornado.ioloop.IOLoop.instance().add_callback(partial(buffer_or_pipe.send, data))
+    next_tick_callback = doc.add_next_tick_callback(partial(test_func_debug,buffer_or_pipe,data, n))
     return next_tick_callback
     
 @without_document_lock
-def test_func(buffer_or_pipe,data):
-    print("Called Test Func")  
+def test_func(buffer_or_pipe,data, n):
+    print("Called Test Func @ n = "+ str(n))  
     buffer_or_pipe.send(data)  
     
+def test_func_debug(buffer_or_pipe,data,n):
+    print("Called Test Func Debug")
+    print(data)  
+    buffer_or_pipe.send(data)      
 # plot tools functions
 def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
     TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer])
@@ -168,13 +181,14 @@ def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),x
     return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title) )
     
 def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", title=None):
-    TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range()#.opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
+    TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range().opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
     return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
 
 # Data buffers for live stream
 
-_SQSbuffer__TOF_integral = online.DataBuffer(100)
+_SQSbuffer__TOF_integral = online.DataBuffer(1000)
+_SQSbuffer__counter = online.DataBuffer(1000)
 print("...2")
 
 # Data pipes and buffers for plots
