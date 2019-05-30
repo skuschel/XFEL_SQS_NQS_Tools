@@ -115,27 +115,31 @@ def makeBigData():
         # performance monitor - frequency of displaying data + loop duration
         perf.iteration()
         # Hand Data from datastream to plots and performance monitor
-        # TOF trace
-        x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
-        if 'tof_trace_next_tick_callback' in locals():
-            if tof_trace_next_tick_callback in doc.session_callbacks:
-                doc.remove_next_tick_callback(tof_trace_next_tick_callback)
-        tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ), n )
-        # TOF integral
+        
+        # Thinga for data buffers
+        ## TOF integral
         integral_tof = abs(np.sum(data['tof']))
         _SQSbuffer__TOF_integral(integral_tof)
         _SQSbuffer__counter(n)
-        if 'tof_integral_next_tick_callback' in locals():
-            if tof_integral_next_tick_callback in doc.session_callbacks:
-                doc.remove_next_tick_callback(tof_integral_next_tick_callback)
-            else:
-                print(_SQSbuffer__counter.data)
-        tof_integral_next_tick_callback = data_into_buffer_or_pipe(_pipe__TOF_integral,  ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data ), n )
-        # TrainId
+        
+        # Things for add next tick callback
+        if n%5==0:
+            ## TOF trace
+            x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
+            if 'tof_trace_next_tick_callback' in locals():
+                if tof_trace_next_tick_callback in doc.session_callbacks:
+                    doc.remove_next_tick_callback(tof_trace_next_tick_callback)
+            tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ), n )
+            ## TOF integral
+            if 'tof_integral_next_tick_callback' in locals():
+                if tof_integral_next_tick_callback in doc.session_callbacks:
+                    doc.remove_next_tick_callback(tof_integral_next_tick_callback)
+                else:
+                    print(_SQSbuffer__counter.data)
+            tof_integral_next_tick_callback = data_into_buffer_or_pipe(_pipe__TOF_integral,  ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data ), n )
+        # Things for performance analysis
+        ## TrainId
         trainId = str(data['tid'])
-        
-        
-        #pd.DataFrame([(n,integral_tof)], columns=['x','y'])
         
         perf.update_trainId(trainId) # give current train id to performance monitor for finding skipping of shots
         perf.time_for_loop_step() # tell performance monitor that this is the end of the for loop
