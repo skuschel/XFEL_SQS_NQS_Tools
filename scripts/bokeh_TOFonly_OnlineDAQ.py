@@ -44,8 +44,8 @@ img_downscale = 15
 
 makeBigData_stop = False
 # DATA CONFIG
-N_datapts = 50000 # total number of TOF datapoints that are visualized
-start_tof = 480000 # index of first TOF datapoint considered
+N_datapts = 35000 # total number of TOF datapoints that are visualized
+start_tof = 485000 # index of first TOF datapoint considered
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
 x_tof = np.arange(start_tof,end_tof) # x-axis for tof data points
@@ -111,8 +111,8 @@ def makeDatastreamPipeline(source):
     ds = processTofs(ds) #treat the tofs
     ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
     #ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
-    if pnCCD_in_stream:
-        ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/CORR_CM:output', spec1='data.image') #get pnCCD
+    #if pnCCD_in_stream:
+        #ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/CORR_CM:output', spec1='data.image') #get pnCCD
         #ds = online.getSomeDetector(ds, name='tid', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
 
     ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
@@ -141,34 +141,41 @@ def makeBigData():
             if tof_in_stream:
                 integral_tof = abs(np.sum(data['tof']))
                 _SQSbuffer__TOF_integral(integral_tof)
+                _SQSbuffer__TOF_avg(data['tof'])
+                if integral_tof > 2e5:
+                    _SQSbuffer__TOF_hits(1)
+                else:
+                    _SQSbuffer__TOF_hits(0)
             if gmd_in_stream:
                 _SQSbuffer__GMD_history(data['gmd'][0])
-            if pnCCD_in_stream:
-                tmp_pnCCD = np.frombuffer(data['pnCCD'], dtype=np.float64)
-                #print("Bytes per int in pnCCD array : "+str(tmp_pnCCD.shape[0] / 1024**2))
-                pnCCD_single = np.reshape(tmp_pnCCD, (1024,1024))
-                pnCCD_integral = np.sum(pnCCD_single)
-                _SQSbuffer__pnCCD_integral(pnCCD_integral)
-                if pnCCD_integral > 5e7:
-                    _SQSbuffer__pnCCD_hits(imresize(pnCCD_single,img_downscale))
+            #if pnCCD_in_stream:
+             #   tmp_pnCCD = np.frombuffer(data['pnCCD'], dtype=np.float64)
+              #  #print("Bytes per int in pnCCD array : "+str(tmp_pnCCD.shape[0] / 1024**2))
+               # pnCCD_single = np.reshape(tmp_pnCCD, (1024,1024))
+                #pnCCD_integral = np.sum(pnCCD_single)
+                #_SQSbuffer__pnCCD_integral(pnCCD_integral)
+                #if pnCCD_integral > 5e7:
+                 #   _SQSbuffer__pnCCD_hits(imresize(pnCCD_single,img_downscale))
             _SQSbuffer__counter(n)
             # Things for add next tick callback
-            if n%10==0:
+            if n%10 is not 0:
                 callback_data_dict = dict()
                 callback_data_dict["tof_trace"] = ( np.squeeze(data['x_tof']) , np.squeeze(data['tof']))
                 callback_data_dict["tof_integral"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data )
-                callback_data_dict["pnCCD_single"] = (pnCCD_single)
-                callback_data_dict["pnCCD_integral"] = (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_integral.data)
-                callback_data_dict["pnCCD_recent_hits"] = (_SQSbuffer__pnCCD_hits.data)
+                callback_data_dict["tof_avg"] = ( np.squeeze(data['x_tof']) , np.squeeze(np.mean(_SQSbuffer__TOF_avg.data, axis=0)) )
+                #callback_data_dict["pnCCD_single"] = (pnCCD_single)
+                #callback_data_dict["pnCCD_integral"] = (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_integral.data)
+                #callback_data_dict["pnCCD_recent_hits"] = (_SQSbuffer__pnCCD_hits.data)
                 callback_data_dict["gmd_history"] = ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data )
                 
                 buffer_or_pipe_dict = dict()
                 buffer_or_pipe_dict["tof_trace"] = _pipe__TOF_single
                 buffer_or_pipe_dict["tof_integral"] = _pipe__TOF_integral
-                buffer_or_pipe_dict["pnCCD_single"] = _pipe__pnCCD_single
-                buffer_or_pipe_dict["pnCCD_integral"] = _pipe__pnCCD_integral
-                buffer_or_pipe_dict["pnCCD_recent_hits"] = _pipe__pnCCD_hits_list
-                buffer_or_pipe_dict["gmd_history"] = _pipe__GMD_history
+                #buffer_or_pipe_dict["tof_avg"] = _pipe__TOF_avg
+                #buffer_or_pipe_dict["pnCCD_single"] = _pipe__pnCCD_single
+                #buffer_or_pipe_dict["pnCCD_integral"] = _pipe__pnCCD_integral
+                #buffer_or_pipe_dict["pnCCD_recent_hits"] = _pipe__pnCCD_hits_list
+                #buffer_or_pipe_dict["gmd_history"] = _pipe__GMD_history
                 
                 if 'all_updates_next_tick_callback' in locals():
                     if all_updates_next_tick_callback in doc.session_callbacks:
@@ -274,7 +281,7 @@ def fill_recent_hits_pipes(buffer_or_pipe_list,data, n):
     
 def test_func_debug(buffer_or_pipe,data,n):
     print("Called Test Func Debug")
-    print(data)  
+    #print(data)  
     buffer_or_pipe.send(data)      
 # plot tools functions
 def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", cmap = ['blue'], title=None):
@@ -302,12 +309,16 @@ def start_stop_dataThread():
     
 # Data buffers for live stream
 
+
 _SQSbuffer__TOF_integral = online.DataBuffer(100)
+_SQSbuffer__TOF_avg = online.DataBuffer(100)
+_SQSbuffer__TOF_hit_trace = online.DataBuffer(1)
+_SQSbuffer__TOF_hits = online.DataBuffer(1000)
 _SQSbuffer__GMD_history = online.DataBuffer(100)
-_SQSbuffer__pnCCD_integral = online.DataBuffer(100)
-_SQSbuffer__pnCCD_hits = online.DataBuffer(10)
-for k in range(5):
-    _SQSbuffer__pnCCD_hits(imresize(np.zeros(shape=(1024,1024)),img_downscale))
+#_SQSbuffer__pnCCD_integral = online.DataBuffer(100)
+_SQSbuffer__TOF_hits = online.DataBuffer(10)
+#for k in range(5):
+#    _SQSbuffer__pnCCD_hits(imresize(np.zeros(shape=(1024,1024)),img_downscale))
 _SQSbuffer__counter = online.DataBuffer(100)
 print("...2")
 
@@ -315,28 +326,31 @@ print("...2")
 ## pipes provide a full update of data to the underlying object eg. plot
 ## buffers add only a single value to the plot and may kick one out when number of elements in the buffer has reached the length/size of the buffer
 _pipe__TOF_single = Pipe(data=[])
+_pipe__TOF_avg = Pipe(data=[])
 #_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
 _pipe__TOF_integral = Pipe(data=[])
-_pipe__pnCCD_single = Pipe(data=[])
-_pipe__pnCCD_integral = Pipe(data=[])
+#_pipe__pnCCD_single = Pipe(data=[])
+#_pipe__pnCCD_integral = Pipe(data=[])
 _pipe__GMD_history = Pipe(data=[])
-_pipe__pnCCD_hits_list = list()
-for i in range(5):
-    _pipe__pnCCD_hits_list.append(Pipe(data=[]))
+#_pipe__pnCCD_hits_list = list()
+#for i in range(5):
+#    _pipe__pnCCD_hits_list.append(Pipe(data=[]))
    
 # SETUP PLOTS
 print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
 ## TOF
-bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 500, height=500) 
-bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 1000, height=500) 
+bokeh_avg_tof =  largeData_line_plot(_pipe__TOF_avg, title="TOF runnign avg", width = 1000, height=500) 
+
+bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 800, height = 250)
 ## pnCCD
-bokeh_live_pnCCD =  pnCCDData_plot(_pipe__pnCCD_single, title="pnCCD single shots - LIVE", width = 500, height =500) 
-bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(0, None), width = 500, height = 250)
-bokeh_hits_pnCCD_list = list()
-for i in range(len(_pipe__pnCCD_hits_list)):
-    bokeh_hits_pnCCD_list.append(pnCCDData_plot(_pipe__pnCCD_hits_list[i], title="pnCCD Most Recent Hits "+str(i), width=370, height=300))
+#bokeh_live_pnCCD =  pnCCDData_plot(_pipe__pnCCD_single, title="pnCCD single shots - LIVE", width = 500, height =500) 
+#bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(0, None), width = 500, height = 250)
+#bokeh_hits_pnCCD_list = list()
+#for i in range(len(_pipe__pnCCD_hits_list)):
+#    bokeh_hits_pnCCD_list.append(pnCCDData_plot(_pipe__pnCCD_hits_list[i], title="pnCCD Most Recent Hits "+str(i), width=370, height=300))
 ## GMD
 bokeh_buffer_gmd_history = smallData_line_plot(_pipe__GMD_history, title="pulseE last 1000 Trains", xlim=(None,None), ylim=(0, None), width = 400, height =250)
 
@@ -345,10 +359,11 @@ bokeh_button_StartStop = Button(label = "Start / Stop", button_type="success")
 bokeh_button_StartStop.on_click(start_stop_dataThread)
 # SET UP BOKEH LAYOUT
 #
-bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_live_tof,column(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history),bokeh_buffer_pnCCD_integral)
-bokeh_row_2 = row(bokeh_hits_pnCCD_list[0],bokeh_hits_pnCCD_list[1],bokeh_hits_pnCCD_list[2],bokeh_hits_pnCCD_list[3],bokeh_hits_pnCCD_list[4])
+#bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_live_tof,column(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history),bokeh_buffer_pnCCD_integral)
+#bokeh_row_2 = row(bokeh_hits_pnCCD_list[0],bokeh_hits_pnCCD_list[1],bokeh_hits_pnCCD_list[2],bokeh_hits_pnCCD_list[3],bokeh_hits_pnCCD_list[4])
 #bokeh_row_2 = row(bokeh_hits_pnCCD_list[0],bokeh_hits_pnCCD_list[1])
-
+bokeh_row_1 = row(bokeh_live_tof,bokeh_avg_tof)
+bokeh_row_2 = row(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history)
 bokeh_row_interact  = bokeh_button_StartStop
 bokeh_layout = column(bokeh_row_1,bokeh_row_2, bokeh_row_interact)
 print("...4")
