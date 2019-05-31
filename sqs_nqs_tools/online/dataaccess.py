@@ -49,8 +49,11 @@ def servedata(host, type='REQ'):
 def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
     data = d['data']
     meta = d['meta']
-    
-    tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
+    if tofDev in data:
+        tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
+    else:
+        print("Warning Device Not in Data - "+'tof'+"  ---> make some radnom tof data")
+        tofraw = np.random.rand(1200000)
     tofcut = np.array(tofraw[idx_range[0]:idx_range[1]])
     
     #subtract a baseline if we are using one
@@ -96,15 +99,15 @@ def getSomePnCCD(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', sp
     data = d['data']
     meta = d['meta']
     if not readFromMeta:
-        try:
+        if spec0 in data:
             d[name] = data[spec0][spec1]
-        except:
+        else:
             print("Warning Device Not in Data - "+name+"  ---> make some radnom pnccd data")
-            d[name] = (np.random.rand(1024,1024)*100).astype("uint16").tobytes()
+            d[name] = (np.random.rand(1024,1024)*100).astype(np.float64).tobytes()
     elif readFromMeta:
-        try:
+        if spec0 in data:
             d[name] = meta[spec0][spec1]
-        except:
+        else:
             print("Warning Device Not in (meta) Data - "+name)
             d[name] = np.array([0])
     return d
