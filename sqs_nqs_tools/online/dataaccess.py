@@ -38,7 +38,7 @@ def servedata(host, type='REQ'):
 
     # Return the newest event in the datastream using an iterator construct
     for ret in c:
-    	yield {'data':ret[0], 'meta':ret[1]} #it comes out as a dict so the we have a consistent datastream
+        yield {'data':ret[0], 'meta':ret[1]} #it comes out as a dict so the we have a consistent datastream
 
 
 
@@ -74,10 +74,39 @@ getPulseEnergy = gp.pipeline_parallel(1)(_getPulseEnergy)  # this works
 
 
 @gp.pipeline
-def getSomeDetector(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels'): ###should this even have a default?
+def getSomeDetector(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels', readFromMeta=False): ###should this even have a default?
     data = d['data']
     meta = d['meta']
-    d[name] = data[spec0][spec1]
+    if not readFromMeta:
+        try:
+            d[name] = data[spec0][spec1]
+        except:
+            print("Warning Device Not in Data - "+name)
+            d[name] = np.array([0])
+    elif readFromMeta:
+        try:
+            d[name] = meta[spec0][spec1]
+        except:
+            print("Warning Device Not in Data - "+name)
+            d[name] = np.array([0])
+    return d
+
+@gp.pipeline
+def getSomePnCCD(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels', readFromMeta=False): ###should this even have a default?
+    data = d['data']
+    meta = d['meta']
+    if not readFromMeta:
+        try:
+            d[name] = data[spec0][spec1]
+        except:
+            print("Warning Device Not in Data - "+name+"  ---> make some radnom pnccd data")
+            d[name] = (np.random.rand(1024,1024)*100).astype("uint16").tobytes()
+    elif readFromMeta:
+        try:
+            d[name] = meta[spec0][spec1]
+        except:
+            print("Warning Device Not in (meta) Data - "+name)
+            d[name] = np.array([0])
     return d
 
 @gp.pipeline
