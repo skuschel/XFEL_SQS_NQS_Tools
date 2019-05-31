@@ -32,9 +32,12 @@ doc = curdoc()  # DOC for Bokeh Objects
 # DATA SOURCE
 source = 'tcp://10.253.0.142:6666'  # LIVE
 #source = 'tcp://127.0.0.1:8011' # emulated live
+tof_in_stream = False
+pnCCD_in_stream = True
+gmd_in_stream = True
 
 # DATA CONFIG
-N_datapts = 10000 # total number of TOF datapoints that are visualized
+N_datapts = 400000 # total number of TOF datapoints that are visualized
 start_tof = 130000 # index of first TOF datapoint considered
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
@@ -96,9 +99,13 @@ class performanceMonitor():
 
 def makeDatastreamPipeline(source):
     ds = online.servedata(source) #get the datastream
-    ds = online.getTof(ds) #get the tofs
-    ds = processTofs(ds) #treat the tofs
-    ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
+    #ds = online.getTof(ds) #get the tofs
+    #ds = processTofs(ds) #treat the tofs
+    #ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
+    ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
+    if pnCCD_in_stream:
+        ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='data.image') #get pnCCD
+    ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
     return ds
 
 def makeBigData():
@@ -108,8 +115,9 @@ def makeBigData():
     ds = makeDatastreamPipeline(source)
     
     perf = performanceMonitor() # outputs to console info on performance - eg what fraction of data was not pulled from live stream and thus missed
-    
+    #print
     n=-1
+    print("Start Live Display")
     for data in ds:
         n+=1
         # performance monitor - frequency of displaying data + loop duration
@@ -118,25 +126,51 @@ def makeBigData():
         
         # Thinga for data buffers
         ## TOF integral
-        integral_tof = abs(np.sum(data['tof']))
-        _SQSbuffer__TOF_integral(integral_tof)
+        if tof_in_stream:
+            integral_tof = abs(np.sum(data['tof']))
+            _SQSbuffer__TOF_integral(integral_tof)
+        if gmd_in_stream:
+            _SQSbuffer__GMD_history(data['gmd'][0])
+        if pnCCD_in_stream:
+            tmp_pnCCD = np.frombuffer(data['pnCCD'], dtype="uint16")
+            #print("Bytes per int in pnCCD array : "+str(tmp_pnCCD.shape[0] / 1024**2))
+            pnCCD_single = np.reshape(tmp_pnCCD, (1024,1024))
+            pnCCD_integral = np.sum(pnCCD_single)
+            _SQSbuffer__pnCCD_integral(pnCCD_integral)
         _SQSbuffer__counter(n)
-        
         # Things for add next tick callback
         if n%5==0:
-            ## TOF trace
-            x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
-            if 'tof_trace_next_tick_callback' in locals():
-                if tof_trace_next_tick_callback in doc.session_callbacks:
-                    doc.remove_next_tick_callback(tof_trace_next_tick_callback)
-            tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ), n )
-            ## TOF integral
-            if 'tof_integral_next_tick_callback' in locals():
-                if tof_integral_next_tick_callback in doc.session_callbacks:
-                    doc.remove_next_tick_callback(tof_integral_next_tick_callback)
-                else:
-                    print(_SQSbuffer__counter.data)
-            tof_integral_next_tick_callback = data_into_buffer_or_pipe(_pipe__TOF_integral,  ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data ), n )
+            if tof_in_stream:
+                ## TOF trace
+                x = np.squeeze(data['x_tof']); y = np.squeeze(data['tof'])
+                if 'tof_trace_next_tick_callback' in locals():
+                    if tof_trace_next_tick_callback in doc.session_callbacks:
+                        doc.remove_next_tick_callback(tof_trace_next_tick_callback)
+                tof_trace_next_tick_callback = data_into_buffer_or_pipe( _pipe__TOF_single,  ( x , y ), n )
+                ## TOF integral
+                if 'tof_integral_next_tick_callback' in locals():
+                    if tof_integral_next_tick_callback in doc.session_callbacks:
+                        doc.remove_next_tick_callback(tof_integral_next_tick_callback)
+                tof_integral_next_tick_callback = data_into_buffer_or_pipe(_pipe__TOF_integral,  ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data ), n )
+            if pnCCD_in_stream:
+                ## pnCCD Single
+                if 'pnCCD_live_single_next_tick_callback' in locals():
+                    if pnCCD_live_single_next_tick_callback in doc.session_callbacks:
+                        doc.remove_next_tick_callback(pnCCD_live_single_next_tick_callback)
+                pnCCD_live_single_next_tick_callback = data_into_buffer_or_pipe( _pipe__pnCCD_single,  (pnCCD_single), n )
+                if 'pnCCD_integral_next_tick_callback' in locals():
+                    if pnCCD_integral_next_tick_callback in doc.session_callbacks:
+                        doc.remove_next_tick_callback(pnCCD_integral_next_tick_callback)
+                pnCCD_integral_next_tick_callback = data_into_buffer_or_pipe( _pipe__pnCCD_integral,  (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_integral.data), n )
+                
+                _pipe__pnCCD_integral
+            if gmd_in_stream:
+                ## GMD history
+                if 'gmd_history_next_tick_callback' in locals():
+                    if gmd_history_next_tick_callback in doc.session_callbacks:
+                        doc.remove_next_tick_callback(gmd_history_next_tick_callback)
+                gmd_history_next_tick_callback = data_into_buffer_or_pipe(_pipe__GMD_history,  ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data ), n )
+                
         # Things for performance analysis
         ## TrainId
         trainId = str(data['tid'])
@@ -188,10 +222,16 @@ def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),x
     TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range().opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
     return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
+def pnCCDData_plot(pipe_or_buffer, width=500, height=500,ylim=(-0.5,0.5),xlim=(-0.5,0.5), title=None):
+    TOF_dmap = hv.DynamicMap(hv.Image, streams=[pipe_or_buffer])
+    TOF_dmap_opt = datashade(TOF_dmap, streams=[PlotSize, RangeXY], dynamic=True)
+    return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, title = title) )
 
 # Data buffers for live stream
 
 _SQSbuffer__TOF_integral = online.DataBuffer(1000)
+_SQSbuffer__GMD_history = online.DataBuffer(1000)
+_SQSbuffer__pnCCD_integral = online.DataBuffer(1000)
 _SQSbuffer__counter = online.DataBuffer(1000)
 print("...2")
 
@@ -201,19 +241,35 @@ print("...2")
 _pipe__TOF_single = Pipe(data=[])
 #_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
 _pipe__TOF_integral = Pipe(data=[])
+_pipe__pnCCD_single = Pipe(data=[])
+_pipe__pnCCD_integral = Pipe(data=[])
+_pipe__GMD_history = Pipe(data=[])
    
 # SETUP PLOTS
 print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
-bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") 
-#bokeh_live_tof_duplicate = largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", cmap=["red"])
-
-#bokeh_buffer_tof_integral = smallData_line_plot(_buffer__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
-bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
+if tof_in_stream:
+    bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") 
+    bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 600)
+if pnCCD_in_stream:
+    bokeh_live_pnCCD =  pnCCDData_plot(_pipe__pnCCD_single, title="pnCCD single shots - LIVE") 
+    bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(0, None), width = 600)
+if gmd_in_stream:
+    bokeh_buffer_gmd_history = smallData_line_plot(_pipe__GMD_history, title="pulseE last 1000 Trains", xlim=(None,None), ylim=(0, None), width = 600)
 
 # SET UP BOKEH LAYOUT
-bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral))
+#
+
+if tof_in_stream and pnCCD_in_stream:
+    bokeh_layout = column(row(bokeh_live_tof,bokeh_buffer_tof_integral))
+elif tof_in_stream:
+    bokeh_layout = column(bokeh_live_pnCCD,row(bokeh_live_tof,bokeh_buffer_tof_integral))
+elif pnCCD_in_stream:
+    bokeh_layout = column(row(bokeh_live_pnCCD,bokeh_buffer_gmd_history,bokeh_buffer_pnCCD_integral))
+elif gmd_in_stream:
+    bokeh_layout = bokeh_buffer_gmd_history
+    print("...")
 print("...4")
 # add bokeh layout to current doc
 doc.add_root(bokeh_layout)
