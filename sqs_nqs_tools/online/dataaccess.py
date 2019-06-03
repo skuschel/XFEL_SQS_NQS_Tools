@@ -15,7 +15,7 @@ SO far: working (i think) stream for:
 If this does actually work, I'll make a nicer interface here
 '''
 from . import generatorpipeline as gp
-from sqs_nqs_tools.experimentDefaults import defaultConf
+from ..experimentDefaults import defaultConf
 import numpy as np
 
 

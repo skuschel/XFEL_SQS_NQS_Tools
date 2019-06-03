@@ -4,7 +4,7 @@
 
 import numpy as np
 import pyqtgraph as pg
-import sqs_nqs_tools.online as xfel
+import sqs_nqs_tools.online as online 
 import time
 
 _daqaliveplot = pg.image(title='DAQ alive: Green good, red bad')
@@ -15,7 +15,7 @@ def plotdaqalive(status):
     '''
     Plots red/green image depending on value of status
     Input:
-	ds
+    ds
     Output:
         None, updates plot window
     '''
@@ -26,8 +26,8 @@ def plotdaqalive(status):
 def isAlive(ds):
     # Attempt to get the detector
     try:
-        xfel.getSomeDetector(ds, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels')
-        #xfel.getSomeDetector(ds, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:output', spec1='data.image.data')
+        online.getSomeDetector(ds, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', spec1='data.image.pixels')
+        #online.getSomeDetector(ds, spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:output', spec1='data.image.data')
     except Exception as exc:
         print(str(exc))
         print('MCP DATA SOURCE CHANGED!!!')
@@ -37,7 +37,7 @@ def isAlive(ds):
 
     # Attempt to get the TOF
     try:
-        xfel.getSomeDetector(ds, spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.channel_1_A.raw.samples')
+        online.getSomeDetector(ds, spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.channel_1_A.raw.samples')
     except Exception as exc:
         print('TOF DATA SOURCE CHANGED!!!')
         print('TOF DATA SOURCE CHANGED!!!')
@@ -55,35 +55,12 @@ def main(source):
     Output:
         none, updates plots
     '''
-    for i, ds in enumerate((xfel.servedata(source))):
+    for i, ds in enumerate((online.servedata(source))):
         plotdaqalive( isAlive(ds) )
 
 if __name__=='__main__':
-    import argparse
-    parser = argparse.ArgumentParser()
-
-    # Default IP is for locally hosted data
-    default='tcp://127.0.0.1:9898'
-
-    ipdict = {'live': 'tcp://10.253.0.142:6666'}
-
-    # Define how to parse command line input
-    parser.add_argument('source', 
-                        type=str, 
-                        help='the source of the data stream. Default is "{}"'.format(default),
-                        default=default,
-                        nargs='?')
-
-    # Parse arguments from command line
-    args = parser.parse_args()
-
-    # find the source
-    source = args.source
-    if source in ipdict:
-        source = ipdict[source]
-
     # Start main function
-    main(source)
+    main(online.parseSource())
 
 
 

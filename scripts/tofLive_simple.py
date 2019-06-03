@@ -7,16 +7,28 @@ import sqs_nqs_tools as tools
 
 import pyqtgraph as pg
 
+# Parameters may to be changed by User
+tof_range = [0,1200000]
 
+# Main Program
+def main(source):
+    '''
+    Iterate over the datastream served by source
+    Input:
+        source: ip address as string
+    Output:
+        none, updates plots
+    '''
+    ds = online.servedata(source) #get the datastream
+    ds = online.getTof(ds, idx_range=tof_range) #get the tofs / give the index range!
 
-source = 'tcp://10.253.0.142:6666' # live
-# source = 'tcp://127.0.0.1:8001' # emulated
+    _tofplot = pg.plot(title='ToF Simple Live {}'.format(tools.__version__))
 
-ds = online.servedata(source) #get the datastream
-ds = online.getTof(ds, idx_range=[0,1200000]) #get the tofs / give the index range!
+    for data in ds:
+            _tofplot.plot(data['tof'].flatten(), clear=True)
+            pg.QtGui.QApplication.processEvents()
 
-_tofplot = pg.plot(title='ToF Simple Live {}'.format(tools.__version__))
-
-for data in ds: #this could be made into a pipeline maybe
-        _tofplot.plot(data['tof'].flatten(), clear=True)
-        pg.QtGui.QApplication.processEvents()
+# Understand input arguments when program started an execute main() which contains the main program
+if __name__=='__main__':
+    #This translates the input arguments (eg live or offline or custom adress tcp://127.0.0.1:50060) to a source and hands it to the main program
+    main(online.parseSource())

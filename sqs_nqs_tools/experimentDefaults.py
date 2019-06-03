@@ -3,6 +3,11 @@
 # Load experiment config dict into module wide variable
 defaultConf = dict()
 
+#Define the defaults for DataStream
+defaultConf['dataStream_tcp_offline'] = "tcp://127.0.0.1:8010" # for argument "offline"
+defaultConf['dataStream_tcp_live'] = "tcp://10.253.0.142:6666" # for argument "live"
+defaultConf['dataStream_tcp_default'] = "tcp://10.253.0.142:6666" # for no argument given | makes scripts without input arguments run in live mode by default
+
 #Define the defaults for all the detector settings
 defaultConf['tofRange'] = [142000,600000] #the range where interesting data appears 142000
 defaultConf['tofBaseEnd'] = 500 # the first n samples to consider as baseline

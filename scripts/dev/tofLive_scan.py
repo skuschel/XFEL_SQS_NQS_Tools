@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# this script (still in dev) is supposed to enable live scans within a run
+# eg change parker valve delay during run and scan over hit rate or so ...
+
 import numpy as np
 
 import sqs_nqs_tools.online as online

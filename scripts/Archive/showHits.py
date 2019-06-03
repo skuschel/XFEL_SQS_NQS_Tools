@@ -9,15 +9,6 @@ import sqs_nqs_tools.online as online
 import sqs_nqs_tools as tools
 from pyqtgraph.ptime import time
 
-#@xfel.filter
-#def filterbywhatever(ds, thres=5):
-#    '''
-#    Place holder for outlier rejection
-#    '''
-#    if whatever(d) < thres:
-#        return True
-
-
 def plotHits(d):
     '''
     Plots current time of flight data from one shot.
@@ -100,7 +91,7 @@ def main(source):
 
 
 if __name__=='__main__':
-	#parse args and fire main
+    #parse args and fire main
     main(online.parseSource())
 
 
