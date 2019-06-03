@@ -1,7 +1,7 @@
 
 # XFEL
 
-## Contributors: M. Ware, S. Kuschel, C. Saladrigas
+## Contributors: M. Ware, S. Kuschel, C. Saladrigas, B. Senfftleben, A. Chatterley, A. Heilrath
 
 This repository contains a collection of functions and tools for live analysis.
 
