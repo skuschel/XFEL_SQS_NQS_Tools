@@ -45,7 +45,7 @@ img_downscale = 15
 makeBigData_stop = False
 # DATA CONFIG
 N_datapts = 35000 # total number of TOF datapoints that are visualized
-start_tof = 485000 # index of first TOF datapoint considered
+start_tof = 24000 # index of first TOF datapoint considered
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
 x_tof = np.arange(start_tof,end_tof) # x-axis for tof data points
@@ -150,7 +150,7 @@ def makeBigData():
                 _SQSbuffer__GMD_history(data['gmd'][0])
             _SQSbuffer__counter(n)
             # Things for add next tick callback
-            if n%10 is not 0:
+            if n%10 is not 0 and n%10 is not 1:
                 callback_data_dict = dict()
                 callback_data_dict["tof_trace"] = ( np.squeeze(data['x_tof']) , np.squeeze(data['tof']))
                 callback_data_dict["tof_integral"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data )
