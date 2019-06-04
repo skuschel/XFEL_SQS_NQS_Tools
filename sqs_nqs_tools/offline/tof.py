@@ -4,10 +4,13 @@ import karabo_bridge as kb
 import karabo_data as kd
 
 from . import access
+from .access import *
 from . import adata as adata
+from ..experimentDefaults import defaultConf
 
 
 def averageTOF( tofs ): #check
+
     '''
     takes TOF data for a given run and averages.  
         inputs
@@ -16,6 +19,24 @@ def averageTOF( tofs ): #check
             an array of the averaged tof spectra  
     '''
     return np.mean( tofs, 0 )
+    
+def get_TOF_correction_for_multi_channel_sampling(data, bg=[0,defaultConf['tofBaseEnd']], samples=defaultConf['tofChannels'] ):
+    '''
+    takes a given tof trace (this can be also an average but does not have to be)
+        inputs
+            data = a single tof trace
+            bg = a range considered as a baseline, by default from 0 to tofBaseEnd as specified in experiment Defaults
+            samples = the number of TOF digitizer channels taken into consideration for correction default taken from experimentDefaults
+        outputs
+            a corrected tof trace  
+    '''
+    for idx in range(samples):
+        data_idx_selection = np.arange(idx,len(data),samples)
+        data_excerpt = data[data_idx_selection]
+        if bg is not None:
+            data_excerpt = data_excerpt - np.mean(data_excerpt[int(np.floor(bg[0]/samples)):int(np.floor(bg[1]/samples))])
+        data[data_idx_selection] = data_excerpt
+    return data
 
 def plotTOF( pixels, tof, xlabel='pixels' ): 
     '''
@@ -295,7 +316,7 @@ def getBrightAvgRunsTOF( runRange, path, tofrange, integrateAt =(280000 - 1000,2
 
     tofs=[]
     for ir,arun in enumerate(runRange):
-        tids, tof, pixels = adata.getTOF( arun, path=path, tofrange=tofrange)
+        tof, pixels = adata.getTOF( arun, path=path, tofrange=tofrange)
         avgtof = averageBrightestTOFs( pixels, tof, integrateAt=integrateAt, behlkeAt=behlkeAt )
         tofs.append(avgtof)
         

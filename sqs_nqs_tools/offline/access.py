@@ -68,3 +68,12 @@ def getTrainIds( runDir , forceUpdate = False):
         runDataDict["runDir"] = runDir
         
     return runDataDict["runData"].train_ids
+    
+def allAvailableDataSources( runDir , forceUpdate = False):
+    if runDataDict["runDir"] is not None and runDataDict["runData"] is not None and not forceUpdate and runDataDict["runDir"] == runDir:
+        # no action needed the dictionary runDataDict contains already the data we are interested in and user does not neccesarily desires the update
+        pass
+    else:
+        runDataDict["runData"] = kd.RunDirectory(runDir)
+        runDataDict["runDir"] = runDir
+    return runDataDict["runData"].all_sources

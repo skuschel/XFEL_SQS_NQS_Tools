@@ -3,12 +3,13 @@ import matplotlib.pyplot as plt
 import karabo_data as kd
 
 from . import access
+from ..experimentDefaults import defaultConf
 
-raw_dir = '/gpfs/exfel/exp/SQS/201802/p002195/raw/'
+raw_dir = defaultConf['rawDir']
 
 def getTOF( runNumber, path=raw_dir, fullrange = False, tofrange=(260000,285000), 
-              dirspec='SQS_DIGITIZER_UTC1/ADC/1:network', 
-              elementspec='digitizers.channel_1_A.raw.samples'):
+              dirspec=defaultConf['tofDevice'], 
+              elementspec=defaultConf['tofDeviceElement']):
     # note renamed from getRunTOF
     '''
     gets TOF data for a given run 
@@ -42,6 +43,16 @@ def getTOF( runNumber, path=raw_dir, fullrange = False, tofrange=(260000,285000)
         pixels = np.arange(0,data.shape[1])
         tofdata = data
     return tofdata, pixels
+
+def getPnCCD(runNumber, path=raw_dir, full=True, roi = None,
+              dirspec=defaultConf['imageDevice'], 
+              elementspec=defaultConf['imageDeviceElement']):
+                  
+    data = access.getData(access.runDir( runNumber , path=path), dirspec, elementspec)
+    if not full and roi is not None:
+        data = data[:,roi[0][0]:roi[0][1],roi[1][0]:roi[1][1]]
+    return data
+    
 
 def getPulseEnergies( run , path=raw_dir , devicePath='SA3_XTD10_XGM/XGM/DOOCS:output', dataPath='data.intensitySa3TD'):
     '''
