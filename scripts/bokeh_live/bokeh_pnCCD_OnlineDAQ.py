@@ -18,12 +18,13 @@ from scipy import signal
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import column, row
 from bokeh.document import without_document_lock
-from bokeh.models.widgets import Button
+from bokeh.models.widgets import Button, Paragraph
 from functools import partial
 
 from threading import Thread
-
+import threader
 import sqs_nqs_tools.online as online
+import sqs_nqs_tools.online.bokeh as online_bokeh
 import sqs_nqs_tools as tools
 
 # MODULE CONFIGS
@@ -35,17 +36,25 @@ doc = curdoc()  # DOC for Bokeh Objects
 
 # DATA SOURCE
 source = 'tcp://10.253.0.142:6666'  # LIVE
-#source = 'tcp://127.0.0.1:8011' # emulated live
+#~ source = 'tcp://127.0.0.1:8010' # emulated live
 tof_in_stream = True
 pnCCD_in_stream = True
-gmd_in_stream = True
+gmd_in_stream = False
+
+two_monitors = False
 
 img_downscale = 15
 
 makeBigData_stop = False
 # DATA CONFIG
-N_datapts = 50000 # total number of TOF datapoints that are visualized
-start_tof = 480000 # index of first TOF datapoint considered
+N_datapts = 30000 # total number of TOF datapoints that are visualized
+start_tof = 60000 # index of first TOF datapoint considered
+single_photon_adu = 250
+background_pnCCD = np.zeros(shape=(1024,1024))
+get_background_pnCCD = True
+background_single_photon_adu = 250
+if get_background_pnCCD:
+    background_pnCCD = np.load('background_pnCCD.npy') * single_photon_adu / background_single_photon_adu
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
 x_tof = np.arange(start_tof,end_tof) # x-axis for tof data points
@@ -60,77 +69,70 @@ def processTofs(d):
     '''
     process tofs in pipeline
     '''
-    d['tof'] = d['tof'][start_tof:end_tof] # cut out index range that we are interested in
+    #~ d['tof'] = d['tof'][start_tof:end_tof] # cut out index range that we are interested in
     d['x_tof'] = x_tof # add values for x axis
+    if False:
+        data = d['tof'] 
+        samples = 16
+        bg=[0,5000]
+        for idx in range(samples):
+            data_idx_selection = np.arange(idx,N_datapts,samples)
+            data_excerpt = data[data_idx_selection]
+            if bg is not None:
+                data_excerpt = data_excerpt - np.mean(data_excerpt[int(np.floor(bg[0]/samples)):int(np.floor(bg[1]/samples))])
+            data[data_idx_selection] = data_excerpt
+        d['tof'] = data
     return d
 
-class performanceMonitor():
-    def __init__(self,trainStep=1):
-        import time
-        self.t_start = time.time()
-        self.t_start_loop = self.t_start
-        self.for_loop_step_dur = 0
-        self.n=-1
-        self.freq_avg = 0
-        self.dt_avg = 0
-        self.trainId = 0
-        self.trainId_old = -1
-        self.skip_count = 0
-        self.trainStep = trainStep
-
-    def iteration(self):
-        self.n+=1
-        self.dt = (time.time()-self.t_start)
-        self.t_start = time.time()
-        freq = 1/self.dt
-        if self.n>0:
-            self.dt_avg = (self.dt_avg * (self.n-1) + self.dt) / self.n
-            freq_avg = 1/self.dt_avg
-            loop_classification_percent = self.for_loop_step_dur/0.1*100
-            if loop_classification_percent < 100:
-                loop_classification_msg="OK"
-            else:
-                loop_classification_msg="TOO LONG!!!"
-            print("Frequency: "+str(round(freq_avg,1)) +" Hz  |  skipped: "+str(self.skip_count)+" ( "+str(round(self.skip_count/self.n*100,1))+" %)  |  n: "+str(self.n)+"/"+str(self.trainId)+"  |  Loop benchmark: "+str(round(loop_classification_percent,1))+ " % (OK if <100%) - "+loop_classification_msg)
-        self.t_start_loop = time.time()
-
-    def update_trainId(self,tid):
-        self.trainId_old = self.trainId
-        self.trainId = tid
-        if self.n == 0:
-            self.trainId_old = str(int(tid) -1)
-        if int(self.trainId) - int(self.trainId_old) is not self.trainStep:
-            self.skip_count +=1
-
-    def time_for_loop_step(self):
-        self.for_loop_step_dur = time.time()-self.t_start_loop
+@online.pipeline
+def processPnCCDs(d):
+    d['pnCCD'] = np.squeeze(d['pnCCD'])[256:768,256:768]
+    #~ d['pnCCD'] = d['pnCCD'] / single_photon_adu # convert to number of photons
+    #~ d['pnCCD_n_lit'] = np.sum(d['pnCCD'] >= 1) # get number of lit px
+    #~ d['pnCCD_integral'] = np.sum(d['pnCCD'])
+    return d
 
 def makeDatastreamPipeline(source):
     ds = online.servedata(source) #get the datastream
-    ds = online.getTof(ds) #get the tofs
+    ds = online.getTof(ds,idx_range=[start_tof,end_tof]) #get the tofs
     ds = processTofs(ds) #treat the tofs
     ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
     #ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
     if pnCCD_in_stream:
-        ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/CORR_CM:output', spec1='data.image') #get pnCCD
-        #ds = online.getSomeDetector(ds, name='tid', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
-
-    ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
+        ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='data.image') #get pnCCD
+        ds = online.getSomeDetector(ds, name='tid', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
+        ds = processPnCCDs(ds) # convert pnccd adu to photon count
+        
+    if gmd_in_stream:
+        ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
+        #~ ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) 
     return ds
+
+
+class makeBigDataThread(Thread):
+    def run(self):
+        makeBigData()
+        
+    def end(self):
+        if self.is_alive():
+            threader.killThread(self.ident)
+
 
 def makeBigData():
     print("Source: "+ source) # print source set for data
 
     # Setup Data Stream Pipeline
     ds = makeDatastreamPipeline(source)
-
-    perf = performanceMonitor() # outputs to console info on performance - eg what fraction of data was not pulled from live stream and thus missed
+    global background_pnCCD
+    background_pnCCD = background_pnCCD[256:768,256:768]
+    perf = online_bokeh.performanceMonitor() # outputs to console info on performance - eg what fraction of data was not pulled from live stream and thus missed
     #print
     n=-1
+    hit_found = False
     print("Start Live Display")
     for data in ds:
         n+=1
-        if n%1==0:
+        if n%1==0: ## skip analysis of incoming shots
             # performance monitor - frequency of displaying data + loop duration
             perf.iteration()
 
@@ -140,35 +142,74 @@ def makeBigData():
             ## TOF integral
             if tof_in_stream:
                 integral_tof = abs(np.sum(data['tof']))
+                height_tof = abs(np.min(data['tof']))
                 _SQSbuffer__TOF_integral(integral_tof)
+                _SQSbuffer__TOF_height(height_tof)
             if gmd_in_stream:
                 _SQSbuffer__GMD_history(data['gmd'][0])
             if pnCCD_in_stream:
-                tmp_pnCCD = np.frombuffer(data['pnCCD'], dtype=np.float64)
-                #print("Bytes per int in pnCCD array : "+str(tmp_pnCCD.shape[0] / 1024**2))
-                pnCCD_single = np.reshape(tmp_pnCCD, (1024,1024))
-                pnCCD_integral = np.sum(pnCCD_single)
+                pnCCD_single_full_bg_cor = np.squeeze(data['pnCCD']) - background_pnCCD
+                pnCCD_single_full = pnCCD_single_full_bg_cor.copy()
+                pnCCD_single_full[pnCCD_single_full<1] = 1
+                #~ pnCCD_integral = data['pnCCD_integral'] 
+                pnCCD_integral = np.sum(pnCCD_single_full_bg_cor) 
+                pnCCD_max = np.max(pnCCD_single_full_bg_cor) 
+                #~ pnCCD_litpx = d['pnCCD_n_lit']
+                pnCCD_litpx = np.sum(pnCCD_single_full_bg_cor >= single_photon_adu)
                 _SQSbuffer__pnCCD_integral(pnCCD_integral)
-                if pnCCD_integral > 5e7:
-                    _SQSbuffer__pnCCD_hits(imresize(pnCCD_single,img_downscale))
+                pnCCD_single = pnCCD_single_full
+                if height_tof>500 or integral_tof>1e6:
+                    hit_found = True
+                    last_hit_pnCCD = pnCCD_single_full
+                    _SQSbuffer__trainId__last_hit(data['tid'])
+                    _SQSbuffer__pnCCD_hitrate_helper(1)
+                else:
+                    _SQSbuffer__pnCCD_hitrate_helper(0)
+                _SQSbuffer__pnCCD_hitrate(np.mean(_SQSbuffer__pnCCD_hitrate_helper)*100)
+                if pnCCD_integral > 1e7:#2.623e5:
+                    hit_img_full = np.squeeze(np.asarray(pnCCD_single_full))
+                    hit_img_full[hit_img_full<0]=0
+                    #~ print(hit_img_full.shape)
+                    resized_hit_img = imresize(hit_img_full.astype(np.uint16),img_downscale*2)
+                    _SQSbuffer__pnCCD_hits(resized_hit_img)
             _SQSbuffer__counter(n)
+            ## TrainId
+            trainId = str(data['tid'])
             # Things for add next tick callback
-            if n%10==0:
+            if n%10==0: # skip plotting 
                 callback_data_dict = dict()
-                callback_data_dict["tof_trace"] = ( np.squeeze(data['x_tof']) , np.squeeze(data['tof']))
-                callback_data_dict["tof_integral"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data )
-                callback_data_dict["pnCCD_single"] = (pnCCD_single)
-                callback_data_dict["pnCCD_integral"] = (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_integral.data)
-                callback_data_dict["pnCCD_recent_hits"] = (_SQSbuffer__pnCCD_hits.data)
-                callback_data_dict["gmd_history"] = ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data )
+                if tof_in_stream:
+                    callback_data_dict["tof_trace"] = ( np.squeeze(data['x_tof']) , np.squeeze(data['tof']))
+                    callback_data_dict["tof_integral"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data )
+                    callback_data_dict["tof_height"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_height.data )
+                if pnCCD_in_stream:
+                    callback_data_dict["pnCCD_single"] = (pnCCD_single)
+                    callback_data_dict["pnCCD_integral"] = (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_integral.data)
+                    callback_data_dict["pnCCD_recent_hits"] = (_SQSbuffer__pnCCD_hits.data)
+                    callback_data_dict["pnCCD_hitrate"] = (_SQSbuffer__counter.data , _SQSbuffer__pnCCD_hitrate.data)
+                    if hit_found:
+                        callback_data_dict["pnCCD_last_hit"] = last_hit_pnCCD
+                        callback_data_dict["pnCCD_last_hit_trainId"] = (1,_SQSbuffer__trainId__last_hit.data)
+                        #~ bokeh_last_hit_trainid_label.text = trainId
+                if gmd_in_stream:
+                    callback_data_dict["gmd_history"] = ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data )
 
                 buffer_or_pipe_dict = dict()
-                buffer_or_pipe_dict["tof_trace"] = _pipe__TOF_single
-                buffer_or_pipe_dict["tof_integral"] = _pipe__TOF_integral
-                buffer_or_pipe_dict["pnCCD_single"] = _pipe__pnCCD_single
-                buffer_or_pipe_dict["pnCCD_integral"] = _pipe__pnCCD_integral
-                buffer_or_pipe_dict["pnCCD_recent_hits"] = _pipe__pnCCD_hits_list
-                buffer_or_pipe_dict["gmd_history"] = _pipe__GMD_history
+                if tof_in_stream:
+                    buffer_or_pipe_dict["tof_trace"] = _pipe__TOF_single
+                    buffer_or_pipe_dict["tof_integral"] = _pipe__TOF_integral
+                    buffer_or_pipe_dict["tof_height"] = _pipe__TOF_height
+                if pnCCD_in_stream:
+                    buffer_or_pipe_dict["pnCCD_single"] = _pipe__pnCCD_single
+                    buffer_or_pipe_dict["pnCCD_integral"] = _pipe__pnCCD_integral
+                    buffer_or_pipe_dict["pnCCD_recent_hits"] = _pipe__pnCCD_hits_list
+                    buffer_or_pipe_dict["pnCCD_hitrate"] = _pipe__pnCCD_hitrate
+                    if hit_found:
+                        hit_found = False
+                        buffer_or_pipe_dict["pnCCD_last_hit"] = _pipe__pnCCD_hits__last_hit
+                        buffer_or_pipe_dict["pnCCD_last_hit_trainId"] = _pipe__trainId__last_hit
+                if gmd_in_stream:
+                    buffer_or_pipe_dict["gmd_history"] = _pipe__GMD_history
 
                 if 'all_updates_next_tick_callback' in locals():
                     if all_updates_next_tick_callback in doc.session_callbacks:
@@ -176,8 +217,7 @@ def makeBigData():
                 all_updates_next_tick_callback = callback_data_dict_into_callback(buffer_or_pipe_dict, callback_data_dict, n )
 
             # Things for performance analysis
-            ## TrainId
-            trainId = str(data['tid'])
+            
 
             perf.update_trainId(trainId) # give current train id to performance monitor for finding skipping of shots
             perf.time_for_loop_step() # tell performance monitor that this is the end of the for loop
@@ -237,32 +277,41 @@ def largeData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),x
     TOF_dmap_opt = datashade(TOF_dmap, streams=[PlotSize, RangeXY], dynamic=True, cmap = cmap)
     return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title) )
 
-def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="TOF signal", title=None):
+def smallData_line_plot(pipe_or_buffer, width=1500, height=400,ylim=(-500, 40),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="", title=None):
     TOF_dmap = hv.DynamicMap(hv.Curve, streams=[pipe_or_buffer]).redim.range().opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
     return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
 
-def pnCCDData_plot(pipe_or_buffer, width=500, height=500,ylim=(-0.5,0.5),xlim=(-0.5,0.5), title=None):
-    TOF_dmap = hv.DynamicMap(hv.Image, streams=[pipe_or_buffer])
+def smallData_scatter_plot(pipe_or_buffer, width=1500, height=400,ylim=(None, None),xlim=(start_tof,start_tof+N_datapts), xlabel="index", ylabel="", title=None):
+    TOF_dmap = hv.DynamicMap(hv.Scatter, streams=[pipe_or_buffer]).redim.range().opts( norm=dict(framewise=True) ) #.redim.range().opts( norm=dict(framewise=True) ) makes x and y lim dynamic
+    return hv_to_bokeh_obj( TOF_dmap.opts(width=width,height=height,ylim=ylim,xlim=xlim, xlabel=xlabel, ylabel=ylabel, title = title))
+
+
+def pnCCDData_plot(pipe_or_buffer, width=500, height=500,ylim=(-0.5,0.5),xlim=(-0.5,0.5), zlim=(None,None), title=None, logz = True):
+    TOF_dmap = hv.DynamicMap(hv.Image, streams=[pipe_or_buffer]).redim.range(z = zlim)
     #TOF_dmap_opt = rasterize(TOF_dmap)
     TOF_dmap_opt = TOF_dmap
     #TOF_dmap_opt = datashade(TOF_dmap, streams=[PlotSize, RangeXY], dynamic=True)
-    return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, title = title, colorbar = True) )
+    return hv_to_bokeh_obj( TOF_dmap_opt.opts(width=width,height=height,ylim=ylim,xlim=xlim, logz = logz, title = title, colorbar = True, cmap = 'Plasma') )
 
 def start_stop_dataThread():
-    global makeBigData_stop
-    if not makeBigData_stop:
-        makeBigData_stop = True
+    if thread.is_alive():
+        makeBigDataThread.end()
     else:
         thread.start()
 
 # Data buffers for live stream
 
 _SQSbuffer__TOF_integral = online.DataBuffer(100)
+_SQSbuffer__TOF_height = online.DataBuffer(100)
 _SQSbuffer__GMD_history = online.DataBuffer(100)
 _SQSbuffer__pnCCD_integral = online.DataBuffer(100)
-_SQSbuffer__pnCCD_hits = online.DataBuffer(10)
+_SQSbuffer__pnCCD_hits = online.DataBuffer(5)
+_SQSbuffer__pnCCD_hitrate_helper = online.DataBuffer(200)
+_SQSbuffer__pnCCD_hitrate = online.DataBuffer(100)
+_SQSbuffer__pnCCD_hits__last_hit = online.DataBuffer(1)
+_SQSbuffer__trainId__last_hit = online.DataBuffer(1)
 for k in range(5):
-    _SQSbuffer__pnCCD_hits(imresize(np.zeros(shape=(1024,1024)),img_downscale))
+    _SQSbuffer__pnCCD_hits(imresize(np.zeros(shape=(512,512)),img_downscale))
 _SQSbuffer__counter = online.DataBuffer(100)
 print("...2")
 
@@ -272,36 +321,51 @@ print("...2")
 _pipe__TOF_single = Pipe(data=[])
 #_buffer__TOF_integral = Buffer(pd.DataFrame({'x':[],'y':[]}, columns=['x','y']), length=100, index=False)
 _pipe__TOF_integral = Pipe(data=[])
+_pipe__TOF_height = Pipe(data=[])
 _pipe__pnCCD_single = Pipe(data=[])
 _pipe__pnCCD_integral = Pipe(data=[])
 _pipe__GMD_history = Pipe(data=[])
+_pipe__pnCCD_hitrate = Pipe(data=[])
 _pipe__pnCCD_hits_list = list()
 for i in range(5):
     _pipe__pnCCD_hits_list.append(Pipe(data=[]))
+_pipe__pnCCD_hits__last_hit = Pipe(data=[])
+_pipe__trainId__last_hit = Pipe(data=[])
 
 # SETUP PLOTS
 print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
 ## TOF
-bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 500, height=500)
-bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+if two_monitors:
+    bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 1000, height=500)
+    bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+    bokeh_buffer_tof_height = smallData_line_plot(_pipe__TOF_height, title="TOF trace height (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+else:
+    bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 500, height=500)
+    bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+    bokeh_buffer_tof_height = smallData_line_plot(_pipe__TOF_height, title="TOF trace height (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+
 ## pnCCD
-bokeh_live_pnCCD =  pnCCDData_plot(_pipe__pnCCD_single, title="pnCCD single shots - LIVE", width = 500, height =500)
-bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(0, None), width = 500, height = 250)
+bokeh_live_pnCCD =  pnCCDData_plot(_pipe__pnCCD_single, title="pnCCD single shots - LIVE", width = 600, height =500,zlim=(0.1,None), logz = True)
+bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(None, None), width = 500, height = 250)
 bokeh_hits_pnCCD_list = list()
 for i in range(len(_pipe__pnCCD_hits_list)):
-    bokeh_hits_pnCCD_list.append(pnCCDData_plot(_pipe__pnCCD_hits_list[i], title="pnCCD Most Recent Hits "+str(i), width=370, height=300))
+    bokeh_hits_pnCCD_list.append(pnCCDData_plot(_pipe__pnCCD_hits_list[i], title="pnCCD Most Recent Hits "+str(i), width=370, height=300,zlim=(0.1,None)))
+bokeh_last_hit_pnCCD =  pnCCDData_plot(_pipe__pnCCD_hits__last_hit, title="pnCCD single shots - last hit high res", width = 600, height =500,zlim=(0.1,None))
+bokeh_buffer_last_hit_trainid = smallData_scatter_plot(_pipe__trainId__last_hit, title="last hit trainid", xlim=(None,None), ylim=(None, None), width = 300, height = 200)
+
 ## GMD
-bokeh_buffer_gmd_history = smallData_line_plot(_pipe__GMD_history, title="pulseE last 1000 Trains", xlim=(None,None), ylim=(0, None), width = 400, height =250)
+bokeh_buffer_pnccd_hitrate = smallData_line_plot(_pipe__pnCCD_hitrate, title="Hitrate in % over window of 200 shots (~40s)", xlim=(None,None), ylim=(0, None), width = 500, height =250)
 
 ## SET UP Additional Widgets
 bokeh_button_StartStop = Button(label = "Start / Stop", button_type="success")
 bokeh_button_StartStop.on_click(start_stop_dataThread)
+bokeh_last_hit_trainid_label = Paragraph(text="#############", width = 200, height = 30)
 # SET UP BOKEH LAYOUT
 #
-bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_live_tof,column(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history),bokeh_buffer_pnCCD_integral)
-bokeh_row_2 = row(bokeh_hits_pnCCD_list[0],bokeh_hits_pnCCD_list[1],bokeh_hits_pnCCD_list[2],bokeh_hits_pnCCD_list[3],bokeh_hits_pnCCD_list[4])
+bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_live_tof,column(bokeh_buffer_tof_integral,bokeh_buffer_tof_height),column(bokeh_buffer_pnCCD_integral,bokeh_buffer_pnccd_hitrate), column(bokeh_last_hit_pnCCD,bokeh_last_hit_trainid_label),bokeh_buffer_last_hit_trainid)
+bokeh_row_2 = row(bokeh_hits_pnCCD_list[1],bokeh_hits_pnCCD_list[2],bokeh_hits_pnCCD_list[3],bokeh_hits_pnCCD_list[4],bokeh_hits_pnCCD_list[0])
 
 bokeh_row_interact  = bokeh_button_StartStop
 bokeh_layout = column(bokeh_row_1,bokeh_row_2, bokeh_row_interact)
@@ -310,5 +374,6 @@ print("...4")
 doc.add_root(bokeh_layout)
 print("...5")
 # Start Thread for Handling of the Live Data Strem
-thread = Thread(target=makeBigData)
+#~ thread = Thread(target=makeBigData)
+thread = makeBigDataThread()
 thread.start()
