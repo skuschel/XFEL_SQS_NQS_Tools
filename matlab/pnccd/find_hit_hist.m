@@ -8,8 +8,8 @@ hist_sums(1)=0;
 median_hist=sum(hist_sums.*sum_x_vec)/sum(hist_sums);     
 
 is_hit=find(sums>median_hist*fac_hit);
-weakest_hit=min(find(sums>median_hist*fac_hit));
-strongest_non_hit=max(find(sums<median_hist*fac_hit));
+weakest_hit=find(min(sums(sums>median_hist*fac_hit))==sums);
+strongest_non_hit=find(max(sums(sums<median_hist*fac_hit)));
 
 if(plot_mode)
     subplot(2,2,2)
