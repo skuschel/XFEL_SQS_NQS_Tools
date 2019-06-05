@@ -2,7 +2,7 @@ clc;
 clear;
 
 dark_nr=107;
-run_nr=152;
+run_nr=161;
 
 addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 % addpath '/home/bkruse/analysis_scripts/development_area';
@@ -20,8 +20,8 @@ pnccd_trainIDs=pnccd.trainId;
 num_images=numel(pnccd_images(1,1,:));
 %%
 sums=sum(sum(pnccd_images,1),2);
-figure
-plot(squeeze(sums),'.')
+% figure
+% plot(squeeze(sums),'.')
 %%
 % pnccd_dark_now=pnccd_dark(:,:,1);
 lit_pix_th=5e3;
@@ -40,7 +40,7 @@ for u=1:numel(pnccd_images(1,1,:))
 % for u=58
     subplot(1,2,1)
     img_now=pnccd_images(:,:,u)-background;
-    imagesc(img_now)
+    imagesc(add_gap(img_now,round(3/0.075)).')
     axis equal tight
     caxis([-0.0e4 0.5e4]);
     title(sprintf('run nr: %d; bunchid: %d',run_nr,pnccd_trainIDs(u)))
