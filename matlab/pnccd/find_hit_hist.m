@@ -5,11 +5,16 @@ sums=squeeze(sum(sum(pnccd_images_backsub,1),2));
 sum_x_vec=linspace(min(sums),max(sums),num_bins);
 hist_sums=hist(sums,sum_x_vec);
 hist_sums(1)=0;
-median_hist=sum(hist_sums.*sum_x_vec)/sum(hist_sums);     
+median_hist=sum(hist_sums.*sum_x_vec)/sum(hist_sums);
 
 is_hit=find(sums>median_hist*fac_hit);
-weakest_hit=find(min(sums(sums>median_hist*fac_hit))==sums);
-strongest_non_hit=find(max(sums(sums<median_hist*fac_hit)));
+if(~isempty(is_hit))
+    weakest_hit=find(min(sums(sums>median_hist*fac_hit))==sums);
+    strongest_non_hit=find(max(sums(sums<median_hist*fac_hit)));
+else
+    weakest_hit=0;
+    strongest_non_hit=0;
+end
 
 if(plot_mode)
     subplot(2,2,2)
@@ -18,6 +23,7 @@ if(plot_mode)
     hold on
     plot([1 1]*median_hist,[0 max(hist_sums)],'r','linewidth',2)
     plot([1 1]*median_hist*fac_hit,[0 max(hist_sums)],'--r','linewidth',2)
+    xlabel('sum')
+    title('histogram over sum of backround substracted images');
 end
 end
-
