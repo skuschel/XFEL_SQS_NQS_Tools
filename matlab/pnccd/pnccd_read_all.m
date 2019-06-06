@@ -24,10 +24,10 @@ function out = pnccd_read_all(info, varargin)
     end
     toc;
 
-    fprintf('Casting images to double...\n');
-    tic;
-    out.data = cast(out.data, 'double');
-    toc;
+%     fprintf('Casting images to double...\n');
+%     tic;
+%     out.data = cast(out.data, 'double');
+%     toc;
     
     out.sum  = squeeze(sum(sum(out.data, 1), 2));
 
