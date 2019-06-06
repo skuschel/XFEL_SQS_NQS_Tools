@@ -6,7 +6,7 @@ load_const;
 
 addpath(genpath('../matlab'));
 
-info.path = get_path(201802, 002195, 'raw', 231);
+info.path = get_path(201802, 002195, 'raw', 275);
 
 tof = read_tof(info);
 
@@ -31,15 +31,19 @@ m_Xe131 = 1; % 130.90508259*const.u;
 % t_idx_list = [75195, 72901, 68578, 66323];
 % ooq_list   = m_Xe131./[3, 4, 8, 13];
 
-t_idx_list = [75194,  68579, 66325];            % used to calibrate run 199
+% t_idx_list = [75194,  68579, 66325];            % used to calibrate run 199
+% ooq_list   = m_Xe131./[3, 8, 13];
+
+t_idx_list = [75194,  68579, 66324];            % used to calibrate run 275
 ooq_list   = m_Xe131./[3, 8, 13];
+
 
 [fit, par, res] = fit_quadratic(t_idx_list, ooq_list);
 
 disp(res);
 
 figure;
-subplot(2,1,1);
+% subplot(2,1,1);
 moq_calibrated = par(1)*(t_index-par(2)).^2;
 plot(t_index, moq_calibrated);
 hold on;
@@ -47,15 +51,15 @@ plot(t_idx_list, ooq_list, 'o');
 xlabel('Uncalibrated flight time [bins]');
 ylabel('Xenon mass / charge state');
 xlim([0.9*min(t_idx_list), max(t_idx_list)*1.1])
-
-
-subplot(2,1,2);
-plot([min(t_idx_list), max(t_idx_list)], [0,0], 'k-')
-hold on;
-plot(t_idx_list, fit - ooq_list, 'ro');
-xlabel('Uncalibrated flight time [bins]');
-ylabel('fit difference');
-xlim([0.9*min(t_idx_list), max(t_idx_list)*1.1])
+title(sprintf('fit = %0.2e + %0.2e * (x - %d)²', par(3), par(1), par(2)));
+% 
+% subplot(2,1,2);
+% plot([min(t_idx_list), max(t_idx_list)], [0,0], 'k-')
+% hold on;
+% plot(t_idx_list, fit - ooq_list, 'ro');
+% xlabel('Uncalibrated flight time [bins]');
+% ylabel('fit difference');
+% xlim([0.9*min(t_idx_list), max(t_idx_list)*1.1])
 
 %% ===== TOF data on calibrated m/q axis =====
 roi = t_index>=par(2);
@@ -71,6 +75,7 @@ ylabel('Ion yield [arb. units]');
 
 grid on;
 
+xlim([0, 3000])
 
 figure;
 subplot(2,2,1);
