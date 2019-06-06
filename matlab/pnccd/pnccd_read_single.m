@@ -26,9 +26,6 @@ function out = pnccd_read_single(info, trainId)
     out.data    = h5read(path_full, pnccd_image, [1,1,pic_idx(idx)], [1024,1024,1]);
     out.trainId = h5read(path_full, pnccd_trainId, pic_idx(idx), 1);
 
-
-
-
     out.data = cast(out.data, 'double');
 end
 
