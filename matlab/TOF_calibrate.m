@@ -6,7 +6,7 @@ load_const;
 
 addpath(genpath('../matlab'));
 
-info.path = get_path(201802, 002195, 'raw', 199);
+info.path = get_path(201802, 002195, 'raw', 231);
 
 tof = read_tof(info);
 
@@ -110,14 +110,50 @@ ratio = int_high / int_low;
 
 
 %% ===== chamber position ratio scan =====
-run = [195, 194, 188, 189, 190, 191, 192, 193];                     % run numbers (chamber position scan)
-pos = [0.61, -1.425, -1.4, -3.24, -5.28, -7.22, -9.17, -11.21];     % corresponding chamber positions in [mm]
-rat = [33.4, 35.8, 37.2, 40.85, 43.5, 44.2, 43.8, 40.2];            % ratios
+% run = [195, 194, 188, 189, 190, 191, 192, 193];                     % run numbers (chamber position scan)
+% pos = [0.61, -1.425, -1.4, -3.24, -5.28, -7.22, -9.17, -11.21];     % corresponding chamber positions in [mm]
+% rat = [33.4, 35.8, 37.2, 40.85, 43.5, 44.2, 43.8, 40.2];            % ratios
+% figure;
+% plot(pos, rat, '-o')
+% xlabel('Chamber position [mm]');
+% ylabel('Ratio high/low charges states');
+% text(-5, 40, 'run 191')
 
-figure;
-plot(pos, rat, '-o')
-xlabel('Chamber position [mm]');
-ylabel('Ratio high/low charges states');
 
-text(-5, 40, 'run 191')
+
+
+
+
+% %% ===== chamber position ratio scan =====
+% run = [211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223];                     % run numbers (chamber position scan)
+% pos = [0, 2, 4, 6, 8, 0, -2, -4, -6, -8, -10, -12, -14];     % corresponding chamber positions in [mm]
+% rat = [40.11, 45.86, 41.69, 20.69, 6.69, 43.75, 44.59, 43.69, 42.52, 35.42, 32.48, 21.36, 4.05];            % ratios
+% 
+% figure;
+% plot(pos, rat, 'o')
+% xlabel('Chamber position [mm]');
+% ylabel('Ratio high/low charges states');
+% 
+% text(-5, 40, 'run 217')
+
+
+
+
+
+%% ===== chamber position ratio scan =====
+% run = [224, 225, 226, 227, 228, 229, 230, 231];                     % run numbers (chamber position scan)
+% pos = [-4, -3, -2, -1, 0, 1, 2, 3];     % corresponding chamber positions in [mm]
+% rat = [44.36, 45.24, 45.99, 44.71, 45.30, 42.76, 42.80, 39.46];            % ratios
+% 
+% figure;
+% plot(pos, rat, 'rx')
+% xlabel('Chamber position [mm]');
+% ylabel('Ratio high/low charges states');
+
+
+
+
+
+
+
 
