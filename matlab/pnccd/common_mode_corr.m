@@ -1,4 +1,6 @@
 function [image] = common_mode_corr(image,nbins)
+% does common mode correction along second dimension of array (line)
+
 size_x=numel(image(:,1))/2;
 size_y=numel(image(1,:))/2;
 
@@ -11,9 +13,8 @@ for quadrant_1=0:1
             zeile=image(u,(size_y*(quadrant_2)+1):size_y*(quadrant_2+1));
             
             hist_zeile=hist(zeile,bright_ax);
-            median_zeile=sum(hist_zeile.*bright_ax)/sum(hist_zeile);     
-%             varianz_zeile=sum(hist_zeile.*(bright_ax-median_zeile).^2)/sum(hist_zeile);     
-
+            median_zeile=sum(hist_zeile.*bright_ax)/sum(hist_zeile);       
+            
 %             hold off
 %             bar(bright_ax,hist_zeile)
 %             hold on
