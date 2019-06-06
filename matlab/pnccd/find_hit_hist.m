@@ -1,7 +1,6 @@
 function [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,plot_mode)
 %takes a histogram of the sums of the background substracted images. Then
 %classifies everything as a hit which is larger than fac_hit*median.
-
 sums=squeeze(sum(sum(pnccd_images_backsub,1),2));
 
 % lit_pix_th=5e2;
