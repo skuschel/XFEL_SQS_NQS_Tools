@@ -38,7 +38,8 @@ fprintf('analyzing %d images... \n',pnccd.num_images);
 background_mean=mean(pnccd.data,3);
 background=max(background_images,[],3);
 pnccd_images_backsub=pnccd.data-repmat(background,1,1,pnccd.num_images);
-pnccd_images_backsub(pnccd_images_backsub<0)=0;     %set everything below zero to zero
+
+% pnccd_images_backsub(pnccd_images_backsub<0)=0;     %set everything below zero to zero
 %% finding hits
 figure(1)
 [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,1);
@@ -57,7 +58,7 @@ end
 %plot weakest hit and strongest non-hit
 subplot(2,2,1)
 % imagesc(add_gap(pnccd_images_backsub(:,:,weakest_hit),gap_size).')
-imagesc(add_gap(pnccd.data(:,:,weakest_hit)-background_mean,gap_size).')
+imagesc(add_gap(cast(pnccd.data(:,:,weakest_hit),'double')-background_mean,gap_size).')
 axis equal tight
 caxis([clim_lo clim_hi]);
 set(gca,'Colorscale','log')
@@ -65,7 +66,7 @@ title(sprintf('weakest hit; run nr: %d; trainId: %d',run_nr,pnccd.trainId(weakes
 
 subplot(2,2,3)
 % imagesc(add_gap(pnccd_images_backsub(:,:,strongest_non_hit),gap_size).')
-imagesc(add_gap(pnccd.data(:,:,strongest_non_hit)-background_mean,gap_size).')
+imagesc(add_gap(cast(pnccd.data(:,:,strongest_non_hit),'double')-background_mean,gap_size).')
 axis equal tight
 caxis([clim_lo clim_hi]);
 set(gca,'Colorscale','log')
@@ -76,6 +77,7 @@ fprintf('number of hits: %d / %d; hit-rate: %.2f percent \n',numel(is_hit),pnccd
 figure(2)
 % for u=1:pnccd.num_images
 for u=is_hit.'
+% for u=5569
     
     %plot the image with mean background substracted
     subplot(1,2,1)
@@ -86,7 +88,7 @@ for u=is_hit.'
     set(gca,'Colorscale','log')
     title(sprintf('%d: run nr: %d; trainId: %d',u,run_nr,pnccd.trainId(u)))
     
-    %         center.y=(583+482-52)/2+gap_size/0.075/2;
+    %     enter.y=(583+482-52)/2+gap_size/0.075/2;
     %     center.x=(570+472-10)/2;
     %     plot_rings(center,54)
     %     xlim(center.x+[-150 150])

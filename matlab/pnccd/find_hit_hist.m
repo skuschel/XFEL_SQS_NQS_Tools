@@ -3,7 +3,6 @@ function [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_bac
 %classifies everything as a hit which is larger than fac_hit*median.
 sums=squeeze(sum(sum(pnccd_images_backsub,1),2));
 
-%test
 % lit_pix_th=5e2;
 % sums=squeeze(sum(sum(pnccd_images_backsub>lit_pix_th,1),2));
 
