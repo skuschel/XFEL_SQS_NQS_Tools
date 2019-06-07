@@ -10,13 +10,12 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_nr=249;
-background_run_nr=248;
+run_nr=279;
+background_run_nr=278;
 
 save_data_flag=0;   %save trainIds of hits and the images as .dat ?
 
 %settings for hit finding
-% fac_hit=2.5;
 fac_hit=1.7;
 num_bins=2000;      %number of bins for hit finding histogram
 mip_th=30;          %MIP finder threshold
@@ -38,8 +37,6 @@ fprintf('analyzing %d images... \n',pnccd.num_images);
 background_mean=mean(pnccd.data,3);
 background=max(background_images,[],3);
 pnccd_images_backsub=pnccd.data-repmat(background,1,1,pnccd.num_images);
-
-% pnccd_images_backsub(pnccd_images_backsub<0)=0;     %set everything below zero to zero
 %% finding hits
 figure(1)
 [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,1);
@@ -77,8 +74,6 @@ fprintf('number of hits: %d / %d; hit-rate: %.2f percent \n',numel(is_hit),pnccd
 figure(2)
 % for u=1:pnccd.num_images
 for u=is_hit.'
-% for u=5569
-    
     %plot the image with mean background substracted
     subplot(1,2,1)
     hold off
@@ -88,23 +83,18 @@ for u=is_hit.'
     set(gca,'Colorscale','log')
     title(sprintf('%d: run nr: %d; trainId: %d',u,run_nr,pnccd.trainId(u)))
     
-    %     enter.y=(583+482-52)/2+gap_size/0.075/2;
-    %     center.x=(570+472-10)/2;
-    %     plot_rings(center,54)
-    %     xlim(center.x+[-150 150])
-    %     ylim(center.y+[-150 150])
-    
     %plot the image with max background substracted (used for hit finding)
     subplot(2,2,2)
     hold off
     imagesc(add_gap(pnccd_images_backsub(:,:,u),gap_size).')
     axis equal tight
-    %     caxis([clim_lo clim_hi]);
+    caxis([clim_lo clim_hi]);
     set(gca,'Colorscale','log')
     title(sprintf('run nr: %d; trainId: %d',run_nr,pnccd.trainId(u)))
     
-    %     subplot(2,2,4)
-    %     plot(tof.data(:,u))
+%     subplot(2,2,4)
+%     plot(tof.data(:,u))
+%     ylim([-2000 1780])
     
     drawnow
 %     pause(1)
