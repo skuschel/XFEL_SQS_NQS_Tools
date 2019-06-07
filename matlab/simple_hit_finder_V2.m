@@ -78,8 +78,8 @@ title('strongest non-hit')
 fprintf('number of hits: %d / %d; hit-rate: %.2f percent \n',numel(is_hit),pnccd.num_images,100*numel(is_hit)/pnccd.num_images)
 %% plot all hits to browse through
 figure(2)
-for u=1:pnccd.num_images
-% for u=is_hit.'
+% for u=1:pnccd.num_images
+for u=is_hit.'
     %plot the image with mean background substracted
     subplot(1,2,1)
     hold off

@@ -1,14 +1,27 @@
 function out = pnccd_read_all(info, varargin)
-    out = pnccd_read_trainId(info);
+    files = get_files(info.path, 'PNCCD01');
 
-    out.num_images = sum(out.trainId>0);
+    if nargin==1
+        files_in =1:numel(files);
+    else
+        files_in = varargin{1};
+    end
+    
+    tid = pnccd_read_trainId(info);
+    
+    out.trainId = [];
+    
+    out.num_images = 0;
+    for file_index = 1:numel(files_in)
+        roi = (tid.fileNr==files_in(file_index)) & tid.trainId>0;
+        
+        out.num_images = out.num_images + sum(roi);
+    end
 
     out.data = zeros(1024,1024,out.num_images, 'uint16');
 
-    files = get_files(info.path, 'PNCCD01');
-
     out.trainId = [];
-
+    
     idx_end = 0;
     
     for i=1:numel(files)
@@ -43,7 +56,7 @@ function out = pnccd_read_all(info, varargin)
         end
     end
 
-    out.num_images          = numel(out.trainId);
+    out.num_images = numel(out.trainId);
 end
 
 
