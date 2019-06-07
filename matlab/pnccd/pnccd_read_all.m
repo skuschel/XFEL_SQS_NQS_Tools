@@ -9,6 +9,8 @@ function out = pnccd_read_all(info, varargin)
 
     out.trainId = [];
 
+    idx_end = 0;
+    
     for i=1:numel(files)
         if nargin>1
             files_in = varargin{1};
@@ -30,7 +32,7 @@ function out = pnccd_read_all(info, varargin)
         roi = current_trainIds>0;
         idx = idx(roi);
         
-        idx_end = 0;
+        
         if (~isempty(idx))
             out.trainId = [out.trainId; current_trainIds(roi)];
         
