@@ -1,12 +1,14 @@
 % This script will add selected background runs to the background database.
 clc;
 clear;
+addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 
-
-runs_to_export=[386];
-
-%________________
+%________________________________________________________________________
 database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
+
+runs_to_export=[391];
+%________________________________________________________________________
+
 
 db=load([database_path 'db_hits.mat']);
 db_bg=load([database_path 'db_bg_runs.mat']);
