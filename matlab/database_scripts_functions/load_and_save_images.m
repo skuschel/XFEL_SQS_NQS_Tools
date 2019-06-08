@@ -10,30 +10,28 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[353;354];
+runs_to_export=[374;387;(392:398)'];
 %____________
 database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 bg_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 image_save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_hits/');
 
-db=load([database_path 'db_hits.mat']);
+db=load([database_path 'db_hits2.mat']);
 db_bg=load([bg_path 'db_bg_runs.mat']);
+% 
+% bg_run_nrs_in=db_get(db,'run_bg');
+% run_nrs_in=db_get(db,'run');
+% train_Ids_in=db_get(db,'trainId');
 
-bg_run_nrs_in=db_get(db,'run_bg');
-run_nrs_in=db_get(db,'run');
-train_Ids_in=db_get(db,'trainId');
+ind_export=db_find(db,'run',runs_to_export);
 
-ind_export=db_find(db,'run',
+runs_all=db_get(db,'run');
+runs_bg_all=db_get(db,'run_bg');
+train_Ids_all=db_get(db,'trainId');
 
-% bg_run_nrs=[];
-% run_nrs=[];
-% train_Ids=[];
-% for u=1:numel(runs_to_export)
-%     ind_export=db_find(db,'run',runs_to_export(u));
-%     bg_run_nrs=[bg_run_nrs; bg_run_nrs_in(ind_export)];
-%     run_nrs=[run_nrs; run_nrs_in(ind_export)];
-%     train_Ids=[train_Ids; train_Ids_in(ind_export)];
-% end
+run_nrs=runs_all(ind_export);
+bg_run_nrs=runs_bg_all(ind_export);
+train_Ids=train_Ids_all(ind_export);
 
 %%
 mkdir(image_save_path);
