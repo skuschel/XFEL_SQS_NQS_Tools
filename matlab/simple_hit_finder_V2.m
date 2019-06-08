@@ -10,7 +10,7 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_nr=280;
+run_nr=283;
 background_run_nr=278;
 
 save_data_flag=0;   %save trainIds of hits and the images as .dat ?

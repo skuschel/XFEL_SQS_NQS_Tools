@@ -10,7 +10,11 @@ function out = pnccd_read(info, varargin)
             otherwise
             out = [];
         end
-	end
+        end
+        
+        tic;
+        out.data = rot90(out.data);
+        toc;
 end
 
 
