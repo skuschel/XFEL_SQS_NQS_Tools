@@ -18,7 +18,7 @@ from scipy import signal
 from bokeh.plotting import figure, curdoc
 from bokeh.layouts import column, row
 from bokeh.document import without_document_lock
-from bokeh.models.widgets import Button
+from bokeh.models.widgets import Button, Paragraph, Div
 from functools import partial
 
 from threading import Thread
@@ -38,17 +38,26 @@ source = 'tcp://10.253.0.142:6666'  # LIVE
 #source = 'tcp://127.0.0.1:8011' # emulated live
 tof_in_stream = True
 pnCCD_in_stream = True
-gmd_in_stream = True
+gmd_in_stream = False
+tof_area_integrals = True
+use_tof_cal_axis = True
 
 img_downscale = 15
 
 makeBigData_stop = False
 # DATA CONFIG
-N_datapts = 35000 # total number of TOF datapoints that are visualized
-start_tof = 24000 # index of first TOF datapoint considered
+N_datapts = 40000 # total number of TOF datapoints that are visualized
+start_tof = 50000 # index of first TOF datapoint considered
+xlim_tof = (start_tof,start_tof+N_datapts)
+if use_tof_cal_axis:
+    xlim_tof = (1,200)
 ## yielded config values
 end_tof = start_tof+N_datapts # index of last TOF datapoint considered
 x_tof = np.arange(start_tof,end_tof) # x-axis for tof data points
+
+integral_range_1 = [63000,63700]
+integral_range_2 = [63700,64600]
+integral_range_3 = [70000,74000]
 
 # Data handling functions
 @gen.coroutine
@@ -60,8 +69,23 @@ def processTofs(d):
     '''
     process tofs in pipeline
     '''
-    d['tof'] = d['tof'][start_tof:end_tof] # cut out index range that we are interested in
+    #d['tof'] = d['tof'][start_tof:end_tof] # cut out index range that we are interested in
     d['x_tof'] = x_tof # add values for x axis
+    d['x_tof_cal'] = d['x_tof']
+    # do tof multi channel correction
+    if True:
+        data = d['tof'] 
+        samples = 16
+        bg=[0,5000]
+        for idx in range(samples):
+            data_idx_selection = np.arange(idx,N_datapts,samples)
+            data_excerpt = data[data_idx_selection]
+            if bg is not None:
+                data_excerpt = data_excerpt - np.mean(data_excerpt[int(np.floor(bg[0]/samples)):int(np.floor(bg[1]/samples))])
+            data[data_idx_selection] = data_excerpt
+        d['tof'] = data
+    if True: # xaxis calibration
+        d['x_tof_cal'] = 1/ (2.64e-4+1.1461e-9*(d['x_tof']-5.8146443e4)**2)
     return d
 
 class performanceMonitor():
@@ -105,9 +129,27 @@ class performanceMonitor():
     def time_for_loop_step(self):
         self.for_loop_step_dur = time.time()-self.t_start_loop
 
+def get_TOF_correction_for_multi_channel_sampling(data, bg=[0,5000], samples=16 ):
+    '''
+    takes a given tof trace (this can be also an average but does not have to be)
+        inputs
+            data = a single tof trace
+            bg = a range considered as a baseline, by default from 0 to tofBaseEnd as specified in experiment Defaults
+            samples = the number of TOF digitizer channels taken into consideration for correction default taken from experimentDefaults
+        outputs
+            a corrected tof trace  
+    '''
+    for idx in range(samples):
+        data_idx_selection = np.arange(idx,len(data),samples)
+        data_excerpt = data[data_idx_selection]
+        if bg is not None:
+            data_excerpt = data_excerpt - np.mean(data_excerpt[int(np.floor(bg[0]/samples)):int(np.floor(bg[1]/samples))])
+        data[data_idx_selection] = data_excerpt
+    return data
+
 def makeDatastreamPipeline(source):
     ds = online.servedata(source) #get the datastream
-    ds = online.getTof(ds) #get the tofs
+    ds = online.getTof(ds,idx_range=[start_tof,end_tof]) #get the tofs
     ds = processTofs(ds) #treat the tofs
     ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
     #ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
@@ -115,7 +157,7 @@ def makeDatastreamPipeline(source):
         #ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/CORR_CM:output', spec1='data.image') #get pnCCD
         #ds = online.getSomeDetector(ds, name='tid', spec0='SQS_NQS_PNCCD1MP/CAL/PNCCD_FMT-0:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
 
-    ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
+    #ds = online.getSomeDetector(ds, name='gmd', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='data.intensitySa3TD') #get GMD
     return ds
 
 def makeBigData():
@@ -130,9 +172,10 @@ def makeBigData():
     print("Start Live Display")
     for data in ds:
         n+=1
-        if n%1==0:
+        perf.iteration()
+        if True:
             # performance monitor - frequency of displaying data + loop duration
-            perf.iteration()
+            
 
             # Hand Data from datastream to plots and performance monitor
 
@@ -142,6 +185,19 @@ def makeBigData():
                 integral_tof = abs(np.sum(data['tof']))
                 _SQSbuffer__TOF_integral(integral_tof)
                 _SQSbuffer__TOF_avg(data['tof'])
+                avg_tof = np.squeeze(np.mean(_SQSbuffer__TOF_avg.data, axis=0)) 
+                if tof_area_integrals:
+                    #tof_data_for_int = np.squeeze(data['tof'])
+                    tof_data_for_int = np.squeeze(avg_tof)
+                    #~ print(tof_data_for_int.shape)
+                    if True:
+                        int_1 = abs(np.sum(tof_data_for_int[integral_range_1[0]-start_tof:integral_range_1[1]-start_tof]))
+                        int_2 = abs(np.sum(tof_data_for_int[integral_range_2[0]-start_tof:integral_range_2[1]-start_tof]))
+                        int_3 = abs(np.sum(tof_data_for_int[integral_range_3[0]-start_tof:integral_range_3[1]-start_tof]))
+                    _SQSbuffer__TOF_integral_1(int_1)
+                    _SQSbuffer__TOF_integral_2(int_1/int_3)
+                    _SQSbuffer__TOF_integral_3(int_2/int_3)
+                
                 if integral_tof > 2e5:
                     _SQSbuffer__TOF_hits(1)
                 else:
@@ -150,17 +206,31 @@ def makeBigData():
                 _SQSbuffer__GMD_history(data['gmd'][0])
             _SQSbuffer__counter(n)
             # Things for add next tick callback
-            if n%10 is not 0 and n%10 is not 1:
+            if n%5==0:
+                if use_tof_cal_axis:
+                    data_x_tof = data['x_tof_cal']
+                else:
+                    data_x_tof = data['x_tof']
+                    
                 callback_data_dict = dict()
-                callback_data_dict["tof_trace"] = ( np.squeeze(data['x_tof']) , np.squeeze(data['tof']))
+                callback_data_dict["tof_trace"] = ( np.squeeze(data_x_tof) , np.squeeze(data['tof']))
                 callback_data_dict["tof_integral"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral.data )
-                callback_data_dict["tof_avg"] = ( np.squeeze(data['x_tof']) , np.squeeze(np.mean(_SQSbuffer__TOF_avg.data, axis=0)) )
-                callback_data_dict["gmd_history"] = ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data )
+                if tof_area_integrals:
+                    callback_data_dict["tof_integral_1"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral_1.data )
+                    callback_data_dict["tof_integral_2"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral_2.data )
+                    callback_data_dict["tof_integral_3"] = ( _SQSbuffer__counter.data , _SQSbuffer__TOF_integral_3.data )
+                
+                callback_data_dict["tof_avg"] = ( np.squeeze(data_x_tof) , avg_tof )
+                #~ callback_data_dict["gmd_history"] = ( _SQSbuffer__counter.data , _SQSbuffer__GMD_history.data )
 
                 buffer_or_pipe_dict = dict()
                 buffer_or_pipe_dict["tof_trace"] = _pipe__TOF_single
                 buffer_or_pipe_dict["tof_integral"] = _pipe__TOF_integral
-                #buffer_or_pipe_dict["tof_avg"] = _pipe__TOF_avg
+                if tof_area_integrals:
+                    buffer_or_pipe_dict["tof_integral_1"] = _pipe__TOF_integral_1
+                    buffer_or_pipe_dict["tof_integral_2"] = _pipe__TOF_integral_2
+                    buffer_or_pipe_dict["tof_integral_3"] = _pipe__TOF_integral_3
+                buffer_or_pipe_dict["tof_avg"] = _pipe__TOF_avg
                 #buffer_or_pipe_dict["gmd_history"] = _pipe__GMD_history
 
                 if 'all_updates_next_tick_callback' in locals():
@@ -252,22 +322,29 @@ def start_stop_dataThread():
 
 # Data buffers for live stream
 
-
-_SQSbuffer__TOF_integral = online.DataBuffer(100)
+buffer_len = 600
+_SQSbuffer__TOF_integral = online.DataBuffer(buffer_len)
+_SQSbuffer__TOF_integral_1 = online.DataBuffer(buffer_len)
+_SQSbuffer__TOF_integral_2 = online.DataBuffer(buffer_len)
+_SQSbuffer__TOF_integral_3 = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_avg = online.DataBuffer(100)
 _SQSbuffer__TOF_hit_trace = online.DataBuffer(1)
 _SQSbuffer__TOF_hits = online.DataBuffer(1000)
-_SQSbuffer__GMD_history = online.DataBuffer(100)
+_SQSbuffer__GMD_history = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_hits = online.DataBuffer(10)
-_SQSbuffer__counter = online.DataBuffer(100)
+_SQSbuffer__counter = online.DataBuffer(buffer_len)
 print("...2")
 
 # Data pipes and buffers for plots
 ## pipes provide a full update of data to the underlying object eg. plot
 ## buffers add only a single value to the plot and may kick one out when number of elements in the buffer has reached the length/size of the buffer
 _pipe__TOF_single = Pipe(data=[])
+_pipe__TOF_hit_trace = Pipe(data=[])
 _pipe__TOF_avg = Pipe(data=[])
 _pipe__TOF_integral = Pipe(data=[])
+_pipe__TOF_integral_1 = Pipe(data=[])
+_pipe__TOF_integral_2 = Pipe(data=[])
+_pipe__TOF_integral_3 = Pipe(data=[])
 _pipe__GMD_history = Pipe(data=[])
 
 # SETUP PLOTS
@@ -275,10 +352,16 @@ print("...3")
 # example for coupled plots
 #         layout = hv.Layout(largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE") + largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE 2", cmap=['red'])).cols(1)
 ## TOF
-bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 1000, height=500)
-bokeh_avg_tof =  largeData_line_plot(_pipe__TOF_avg, title="TOF runnign avg", width = 1000, height=500)
+bokeh_live_tof =  largeData_line_plot(_pipe__TOF_single, title="TOF single shots - LIVE", width = 1000, height=500, xlim = xlim_tof)
+bokeh_avg_tof =  largeData_line_plot(_pipe__TOF_avg, title="TOF runnign avg", width = 1000, height=500, xlim = xlim_tof)
+#~ bokeh_avg_tof =  largeData_line_plot(_pipe__TOF_avg, title="TOF runnign avg", width = 1000, height=500)
 
-bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 800, height = 250)
+
+bokeh_buffer_tof_integral = smallData_line_plot(_pipe__TOF_integral, title="TOF trace full range integral (absolute)", xlim=(None,None), ylim=(0, None), width = 400, height = 250)
+bokeh_buffer_tof_integral_1 = smallData_line_plot(_pipe__TOF_integral_1, title="TOF trace integral range 1", xlim=(None,None), ylim=(None, None), width = 400, height = 250)
+bokeh_buffer_tof_integral_2 = smallData_line_plot(_pipe__TOF_integral_2, title="TOF trace integral range 1 / 3", xlim=(None,None), ylim=(None, None), width = 600, height = 250)
+bokeh_buffer_tof_integral_3 = smallData_line_plot(_pipe__TOF_integral_3, title="TOF trace integral range 2 / 3", xlim=(None,None), ylim=(None, None), width = 600, height = 250)
+
 ## GMD
 bokeh_buffer_gmd_history = smallData_line_plot(_pipe__GMD_history, title="pulseE last 1000 Trains", xlim=(None,None), ylim=(0, None), width = 400, height =250)
 
@@ -288,7 +371,7 @@ bokeh_button_StartStop.on_click(start_stop_dataThread)
 # SET UP BOKEH LAYOUT
 #
 bokeh_row_1 = row(bokeh_live_tof,bokeh_avg_tof)
-bokeh_row_2 = row(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history)
+bokeh_row_2 = row(bokeh_buffer_tof_integral,bokeh_buffer_gmd_history,bokeh_buffer_tof_integral_1,bokeh_buffer_tof_integral_2,bokeh_buffer_tof_integral_3)
 bokeh_row_interact  = bokeh_button_StartStop
 bokeh_layout = column(bokeh_row_1,bokeh_row_2, bokeh_row_interact)
 print("...4")

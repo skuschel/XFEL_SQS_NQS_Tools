@@ -49,7 +49,7 @@ def servedata(host, type='REQ'):
 def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
     data = d['data']
     meta = d['meta']
-    if tofDev in data:
+    if True:#tofDev in data:
         tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     else:
         print("Warning Device Not in Data - "+'tof'+"  ---> make some radnom tof data")
@@ -90,9 +90,9 @@ def getSomeDetector(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput',
     data = d['data']
     meta = d['meta']
     if not readFromMeta:
-        try:
+        if True:
             d[name] = data[spec0][spec1]
-        except:
+        else:
             print("Warning Device Not in Data - "+name)
             d[name] = np.array([0])
     elif readFromMeta:
@@ -110,9 +110,13 @@ def getSomePnCCD(d, name='data', spec0='SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput', sp
     if not readFromMeta:
         if spec0 in data:
             d[name] = data[spec0][spec1]
+            d[name+'_in_data']=True
         else:
-            print("Warning Device Not in Data - "+name+"  ---> make some radnom pnccd data")
-            d[name] = (np.random.rand(1024,1024)*100).astype(np.float64).tobytes()
+            #~ print("Warning Device Not in Data - "+name+"  ---> make some radnom pnccd data")
+            #~ d[name] = (np.random.rand(1024,1024)*100).astype(np.float64).tobytes()
+            print("Warning Device Not in Data - "+name+"  ---> make some empty pnccd data")
+            d[name] = np.zeros(shape=(1024,1024))#.astype(np.float64).tobytes()
+            d[name+'_in_data']=False
     elif readFromMeta:
         if spec0 in data:
             d[name] = meta[spec0][spec1]
