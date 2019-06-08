@@ -20,8 +20,8 @@ def print_stats(arr):
 
 for_sean = False
 dark_only = False
-run_bg = 304
-run_dark = 303
+run_bg = 368
+run_dark = 365
 raw_path ='/gpfs/exfel/exp/SQS/201802/p002195/raw'
 outpath_sean = '/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_for_recreation/'
 if not dark_only:
@@ -36,18 +36,18 @@ if not dark_only:
     dark_avg_2[dark_avg_2<0] = 0
     
     pnCCDdata_p = pnCCDdata.copy()
-    pnCCDdata_p = np.asarray(pnCCDdata_p)
-    for i in range(pnCCDdata.shape[0]):
-        pnCCDdata_p[i,:,:] = pnCCDdata_p[i,:,:] - dark_avg_2
-        if False:
-            cm_mode_avgs_upper = np.mean(pnCCDdata_p[i,0:150,:], axis = 0)
-            cm_mode_cor_upper = np.matlib.repmat(np.squeeze(cm_mode_avgs_upper),512,1)
-            cm_mode_avgs_lower = np.mean(pnCCDdata_p[i,(1023-150):1023,:], axis = 0)
-            cm_mode_cor_lower = np.matlib.repmat(np.squeeze(cm_mode_avgs_lower),512,1)
+    pnCCDdata_p = np.asarray(pnCCDdata_p)-dark_avg_2
+    #~ for i in range(pnCCDdata.shape[0]):
+        #~ pnCCDdata_p[i,:,:] = pnCCDdata_p[i,:,:] - dark_avg_2
+        #~ if False:
+            #~ cm_mode_avgs_upper = np.mean(pnCCDdata_p[i,0:150,:], axis = 0)
+            #~ cm_mode_cor_upper = np.matlib.repmat(np.squeeze(cm_mode_avgs_upper),512,1)
+            #~ cm_mode_avgs_lower = np.mean(pnCCDdata_p[i,(1023-150):1023,:], axis = 0)
+            #~ cm_mode_cor_lower = np.matlib.repmat(np.squeeze(cm_mode_avgs_lower),512,1)
             #~ print(cm_mode_avgs_lower.shape)
             #~ print(cm_mode_cor_lower.shape)
-            cm_mode_cor = np.concatenate((cm_mode_cor_upper,cm_mode_cor_lower))
-            pnCCDdata_p[i,:,:] = pnCCDdata_p[i,:,:] - cm_mode_cor
+            #~ cm_mode_cor = np.concatenate((cm_mode_cor_upper,cm_mode_cor_lower))
+            #~ pnCCDdata_p[i,:,:] = pnCCDdata_p[i,:,:] - cm_mode_cor
     pnCCDmax =  np.max(pnCCDdata_p,axis=0)
     pnCCDavg = np.mean(pnCCDdata.sel(trainId=slice(10,1e10)),axis=0)-dark_avg
     print_stats(np.mean(pnCCDdata.sel(trainId=slice(10,1e10)),axis=0))

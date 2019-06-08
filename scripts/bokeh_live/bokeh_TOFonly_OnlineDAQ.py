@@ -40,7 +40,7 @@ tof_in_stream = True
 pnCCD_in_stream = True
 gmd_in_stream = False
 tof_area_integrals = True
-use_tof_cal_axis = False
+use_tof_cal_axis = True
 
 img_downscale = 15
 
@@ -327,7 +327,7 @@ _SQSbuffer__TOF_integral = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_integral_1 = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_integral_2 = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_integral_3 = online.DataBuffer(buffer_len)
-_SQSbuffer__TOF_avg = online.DataBuffer(500)
+_SQSbuffer__TOF_avg = online.DataBuffer(100)
 _SQSbuffer__TOF_hit_trace = online.DataBuffer(1)
 _SQSbuffer__TOF_hits = online.DataBuffer(1000)
 _SQSbuffer__GMD_history = online.DataBuffer(buffer_len)
