@@ -1,8 +1,9 @@
 % This script will export scattering patterns as .png images. It will use
 % the hit database and the background database, so they have to be updated.
-
 clc;
 clear;
+addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
+
 %___________
 
 clim_lo=1e2;
@@ -18,21 +19,22 @@ image_save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_hi
 db=load([database_path 'db_hits.mat']);
 db_bg=load([bg_path 'db_bg_runs.mat']);
 
-for u=1:numel(db.entry)
-    bg_run_nrs_in(u)=db.entry(u).run_bg;
-    run_nrs_in(u)=db.entry(u).run;
-    train_Ids_in(u)=db.entry(u).trainId;
-end
+bg_run_nrs_in=db_get(db,'run_bg');
+run_nrs_in=db_get(db,'run');
+train_Ids_in=db_get(db,'trainId');
 
-bg_run_nrs=[];
-run_nrs=[];
-train_Ids=[];
-for u=1:numel(runs_to_export)
-    ind_export=find(run_nrs_in==runs_to_export(u));
-    bg_run_nrs=[bg_run_nrs bg_run_nrs_in(ind_export)];
-    run_nrs=[run_nrs run_nrs_in(ind_export)];
-    train_Ids=[train_Ids train_Ids_in(ind_export)];
-end
+ind_export=db_find(db,'run',
+
+% bg_run_nrs=[];
+% run_nrs=[];
+% train_Ids=[];
+% for u=1:numel(runs_to_export)
+%     ind_export=db_find(db,'run',runs_to_export(u));
+%     bg_run_nrs=[bg_run_nrs; bg_run_nrs_in(ind_export)];
+%     run_nrs=[run_nrs; run_nrs_in(ind_export)];
+%     train_Ids=[train_Ids; train_Ids_in(ind_export)];
+% end
+
 %%
 mkdir(image_save_path);
 fig=figure('position',[80 272 600 600]);
