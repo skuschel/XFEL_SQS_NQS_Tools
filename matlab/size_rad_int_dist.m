@@ -12,18 +12,19 @@ background_mean=mean(pnccd_background.data,3);
 
 mask=ones(1024,1024);
 
-mask(483:543,491:511)=0;
+mask(491:511,483:543)=0;
+
 full_opening_angle=120; %degrees
 x=(1:1024);
 y=(1:1024);
 [X,Y]=meshgrid(x-512,y-512);
-phi=atan2(Y,X);
+phi=atan2(X,Y);
 mask(abs(phi)<pi-full_opening_angle/2*pi/180)=0;
 % mask(512:end,:)=0;
 
 nrad=400;
-center.x=534;
-center.y=514;
+center.x=514;
+center.y=534;
 
 
 clear ring_spacings
@@ -52,7 +53,7 @@ for run_nr=run_nr_list
         
         subplot(1,2,1)
         hold off
-        imagesc(x,y,(img_to_analyze.*mask).')
+        imagesc(x,y,(img_to_analyze.*mask))
         axis equal tight
         caxis([clim_lo clim_hi]);
         set(gca,'Colorscale','log')
@@ -65,7 +66,7 @@ for run_nr=run_nr_list
         
         subplot(2,2,2)
         [theta,rho]=cart2pol(x-center.x,y-center.y);
-        surf(theta,rho,(img_to_analyze.*mask).','edgecolor','none');
+        surf(theta,rho,(img_to_analyze.*mask),'edgecolor','none');
         view(2)
         ylim([0 300])
         caxis([clim_lo clim_hi]);
@@ -81,7 +82,7 @@ for run_nr=run_nr_list
         set(gca,'yscale','log')
         xlim([0 500])
         title(sprintf('%.2f',ring_spacings(k)))
-%         drawnow
+        drawnow
     end
 end
 %%
