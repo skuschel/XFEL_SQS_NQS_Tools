@@ -13,7 +13,7 @@ median_hist=sum(hist_sums.*sum_x_vec)/sum(hist_sums);
 
 is_hit=find(sums>median_hist*fac_hit);
 if(~isempty(is_hit))
-    weakest_hit=find(min(sums(sums>median_hist*fac_hit))==sums);
+    weakest_hit=find(min(sums(is_hit))==sums);
     strongest_non_hit=find(max(sums(sums<median_hist*fac_hit)));
 else
     weakest_hit=0;
