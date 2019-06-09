@@ -6,11 +6,9 @@ addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 %________________________________________________________________________
 database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 
-runs_to_export=[391];
+runs_to_export=[407];
 %________________________________________________________________________
 
-
-db=load([database_path 'db_hits.mat']);
 db_bg=load([database_path 'db_bg_runs.mat']);
 
 initial_size=numel(db_bg.run);
