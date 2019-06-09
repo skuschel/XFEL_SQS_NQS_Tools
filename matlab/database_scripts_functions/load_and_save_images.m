@@ -4,44 +4,52 @@ clc;
 clear;
 addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 
-%___________
+%__________________________________________________________________________
 
 clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[374;387;(392:398)'];
-%____________
+runs_to_export=[429];
+all_runs_flag=0;
+%__________________________________________________________________________
+
 database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
-bg_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 image_save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_hits/');
 
-db=load([database_path 'db_hits2.mat']);
-db_bg=load([bg_path 'db_bg_runs.mat']);
-% 
-% bg_run_nrs_in=db_get(db,'run_bg');
-% run_nrs_in=db_get(db,'run');
-% train_Ids_in=db_get(db,'trainId');
+db_runs=load([database_path 'db_runs.mat']);
+db_hits=load([database_path 'db_hits.mat']);
+db_bg=load([database_path 'db_bg_runs.mat']);
 
-ind_export=db_find(db,'run',runs_to_export);
+runs_all=db_get(db_hits,'run');
+runs_bg_all=db_get(db_runs,'run_bg');
+train_Ids_all=db_get(db_hits,'trainId');
 
-runs_all=db_get(db,'run');
-runs_bg_all=db_get(db,'run_bg');
-train_Ids_all=db_get(db,'trainId');
+if all_runs_flag
+    runs_to_export=unique(runs_all);    %all images
+end
 
-run_nrs=runs_all(ind_export);
-bg_run_nrs=runs_bg_all(ind_export);
-train_Ids=train_Ids_all(ind_export);
+ind_export_hits=db_find(db_hits,'run',runs_to_export);
+ind_export_runs=db_find(db_runs,'run',runs_to_export);
+
+run_nrs=runs_all(ind_export_hits);
+train_Ids=train_Ids_all(ind_export_hits);
 
 %%
 mkdir(image_save_path);
-fig=figure('position',[80 272 600 600]);
+fig=figure('position',[80 272 800 800]);
+set(gcf,'Color','w')
+drawnow
 
 for u=1:numel(train_Ids)
-    if(bg_run_nrs(u)>0)
+    fprintf('%d / %d \n',u,numel(train_Ids));
+    
+    curr_bg_run=db_get(db_runs,'run_bg',db_find(db_runs,'run',run_nrs(u)));
+    
+    if(curr_bg_run>0)
         info.path=get_path(201802, 002195, 'raw',  run_nrs(u));
         pnccd=pnccd_read(info,'trainId',train_Ids(u));
-        bg_index=find(db_bg.run==bg_run_nrs(u));
+        bg_index=find(db_bg.run==curr_bg_run);
         bg_now=db_bg.mean(:,:,bg_index);
         image_now=pnccd.data-bg_now;
         
@@ -56,7 +64,11 @@ for u=1:numel(train_Ids)
         drawnow
         
         tic
-        saveas(fig,[image_save_path sprintf('run_%03d_trainId_%09d.png',run_nrs(u),train_Ids(u))]);
+        im_name=[image_save_path sprintf('run_%03d_trainId_%09d.png',run_nrs(u),train_Ids(u))];
+        %         saveas(fig,im_name);
+        F=getframe(fig);
+        img=frame2im(F);
+        imwrite(img,im_name);
         toc
     end
 end

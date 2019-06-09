@@ -4,6 +4,5 @@ function [mip] = is_MIP(image,nbins,mip_th)
     histo(1)=0;
     
     median=sum(histo.*h_x)/sum(histo);
-    mip=max(h_x>median*mip_th);
+    mip=max(h_x>median*mip_th);    
 end
-
