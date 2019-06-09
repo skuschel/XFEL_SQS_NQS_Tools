@@ -10,8 +10,7 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[(401:404)'];
-% runs_to_export=404;
+runs_to_export=[(412)'];
 all_runs_flag=0;
 %__________________________________________________________________________
 
@@ -46,8 +45,7 @@ set(gcf,'Color','w')
 for u=1:numel(train_Ids)
     fprintf('%d / %d \n',u,numel(train_Ids));
     
-    entry=db_entries(db_runs,db_find(db_runs,'run',run_nrs(u)));
-    curr_bg_run=entry.run_bg;
+    curr_bg_run=db_get(db_runs,'run_bg',db_find(db_runs,'run',run_nrs(u)));
     
     if(curr_bg_run>0)
         info.path=get_path(201802, 002195, 'raw',  run_nrs(u));

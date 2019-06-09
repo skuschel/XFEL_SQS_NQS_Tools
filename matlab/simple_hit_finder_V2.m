@@ -4,16 +4,16 @@ addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 
 %________________________________________________
 %for plotting the image
-gap_size=3.3; %mm
+gap_size=4.3; %mm
 
 clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_nr=374;
-background_run_nr=372;
+run_nr=412;
+background_run_nr=407;
 
-save_data_flag=0;   %save trainIds of hits and the images as .dat ?
+save_data_flag=1;   %save trainIds of hits and the images as .dat ?
 
 %settings for hit finding
 % fac_hit=2.7;    %for runs before run 187
@@ -25,7 +25,7 @@ nbins_MIP=2000;
 
 info.path=get_path(201802, 002195, 'raw', run_nr);
 pnccd=pnccd_read(info);
-% pnccd=pnccd_read(info,'files',1:11);
+% pnccd=pnccd_read(info,'files',1:6);
 % tof=read_tof(info);
 
 %specify background images here!
@@ -35,7 +35,7 @@ background_images=pnccd_background.data;
 % background_images=pnccd.data(:,:,1:100);
 
 fprintf('analyzing %d images... \n',pnccd.num_images);
-%% substract the background
+%% subtract the background
 background_mean=mean(background_images,3);
 background=max(background_images,[],3);
 pnccd_images_backsub=pnccd.data-repmat(background,1,1,pnccd.num_images);
@@ -79,10 +79,10 @@ title('strongest non-hit')
 
 fprintf('number of hits: %d / %d; hit-rate: %.2f percent \n',numel(is_hit),pnccd.num_images,100*numel(is_hit)/pnccd.num_images)
 %% plot all hits to browse through
-figure(2)
+figure(12)
 % for u=1:pnccd.num_images
 for u=is_hit.'
-% for u=2951
+% for u=3592
     
     %plot the image with mean background substracted
     subplot(1,2,1)
@@ -108,12 +108,10 @@ for u=is_hit.'
     
 %     colormap(jet(256))
     drawnow
-    pause(0.5)
+%     pause(1)
 end
 subplot(1,2,1)
-% size_img=400;
-% xlim(512+[-size_img size_img])
-% ylim(512+[-size_img size_img]+gap_size)
+
 colorbar
 subplot(2,2,2)
 colorbar
