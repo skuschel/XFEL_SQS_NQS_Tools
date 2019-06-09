@@ -30,8 +30,8 @@ bg_index=find(db_bg.run==curr_bg_run);
 bg_now=db_bg.mean(:,:,bg_index);
 
 %load image
-info.path=get_path(201802, 002195, 'raw', run_now);
-pnccd=pnccd_read(info,'trainId',trainId_to_plot);
+path=get_path(201802, 002195, 'raw', run_now);
+pnccd=pnccd_read(path,'trainId',trainId_to_plot);
 image_now=pnccd.data-bg_now;
 
 %% plot the figure
