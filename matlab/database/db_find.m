@@ -1,6 +1,10 @@
 function entries = db_find(db, fieldname, value)
     entries = [];
     
+    if ~isfield(db, 'entry')
+       return; 
+    end
+    
     for i=1:numel(db.entry)
         if ischar(value)
             if any(strcmp(db.entry(i).(fieldname), value))
