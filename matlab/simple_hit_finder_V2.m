@@ -17,7 +17,7 @@ clim_hi=0.5e4;
 %run numbers
 run_dark_nr=    444;
 run_bg_nr=      445;
-run_nr=         442;
+run_nr=         447;
 
 
 save_db_flag=1;   %save trainIds of hits ?
@@ -27,7 +27,7 @@ plot_flag=1;
 %settings for hit finding
 % fac_hit=2.7;    %for runs before run 187
 % fac_hit=1.7;
-fac_hit=1.3;
+fac_hit=1.5;
 num_bins=100000;      %number of bins for hit finding histogram
 mip_th=100;          %MIP finder threshold
 nbins_MIP=2000;
@@ -156,7 +156,7 @@ if(save_db_flag)
     fclose(fid);
     
 end
-if(mat_save_flag)
+if(save_mat_flag)
     %save mat files
     fprintf('saving hits as mat files...\n')
     save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_for_recreation/Run_%d/',run_nr);
