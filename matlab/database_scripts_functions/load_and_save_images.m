@@ -10,7 +10,7 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[415,416,417];
+runs_to_export=[429];
 all_runs_flag=0;
 %__________________________________________________________________________
 
@@ -39,6 +39,7 @@ train_Ids=train_Ids_all(ind_export_hits);
 mkdir(image_save_path);
 fig=figure('position',[80 272 800 800]);
 set(gcf,'Color','w')
+drawnow
 
 for u=1:numel(train_Ids)
     fprintf('%d / %d \n',u,numel(train_Ids));
