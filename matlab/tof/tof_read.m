@@ -1,4 +1,4 @@
-function out = read_tof(path)
+function out = tof_read(path)
     files = get_files(path, 'DA02');
         
     out.data = [];
