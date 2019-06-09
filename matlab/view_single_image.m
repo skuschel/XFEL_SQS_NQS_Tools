@@ -5,13 +5,13 @@ addpath(genpath('/home/bkruse/git_code/XFEL_SQS_NQS_Tools/matlab/'));
 %__________________________________________________________________________
 
 clim_lo=1e2;
-clim_hi=0.5e4;
+clim_hi=2e4;
 gap_size=4;
 
 center.x=514;
 center.y=534;
    
-trainId_to_plot=136324473;
+trainId_to_plot=136999946;
 
 %__________________________________________________________________________
 %load databases
@@ -44,7 +44,7 @@ caxis([clim_lo clim_hi]);
 set(gca,'Colorscale','log')
 title(sprintf('run nr: %d; trainId: %d',run_now,pnccd.trainId))
 colorbar
-% plot_rings(center,100);
+plot_rings(center,100);
 
 mask=ones(1024,1024);
 

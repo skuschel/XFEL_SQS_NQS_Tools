@@ -15,17 +15,19 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_nr=         429;
-run_bg_nr=      426;
-run_dark_nr=    425;
+run_dark_nr=    444;
+run_bg_nr=      445;
+run_nr=         442;
 
-save_data_flag=0;   %save trainIds of hits and the images as .dat ?
+
+save_db_flag=1;   %save trainIds of hits ?
+save_mat_flag=1;    %save the images as .mat ?
 plot_flag=1;
 
 %settings for hit finding
 % fac_hit=2.7;    %for runs before run 187
 % fac_hit=1.7;
-fac_hit=1.5;
+fac_hit=1.3;
 num_bins=100000;      %number of bins for hit finding histogram
 mip_th=100;          %MIP finder threshold
 nbins_MIP=2000;
@@ -90,7 +92,7 @@ if(plot_flag)
     % for u=1:pnccd.num_images
     %     if(sum(u==is_hit)==0)
     for u=is_hit.'
-        %     if(is_MIP(pnccd_images_backsub(:,:,u),nbins_MIP,mip_th))
+%             if(is_MIP(pnccd_images_backsub(:,:,u),nbins_MIP,mip_th))
         % for u=655
         
         %plot the image with mean background substracted
@@ -118,7 +120,7 @@ if(plot_flag)
         %     colormap(jet(256))
         drawnow
         %     pause(0.5)
-        %     end
+%             end
     end
     subplot(1,2,1)
     
@@ -127,7 +129,7 @@ if(plot_flag)
     colorbar
 end
 %% SAVING??
-if(save_data_flag)
+if(save_db_flag)
     
     %save to database
     for i=1:numel(is_hit)
@@ -153,6 +155,8 @@ if(save_data_flag)
     fprintf(fid,'%d \n',trainid_list);
     fclose(fid);
     
+end
+if(mat_save_flag)
     %save mat files
     fprintf('saving hits as mat files...\n')
     save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_for_recreation/Run_%d/',run_nr);
