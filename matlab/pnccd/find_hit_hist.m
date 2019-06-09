@@ -20,17 +20,17 @@ else
     strongest_non_hit=0;
 end
 
-if(~isempty(is_hit))
-    if(plot_mode)
-        subplot(2,2,2)
-        hold off
-        bar(sum_x_vec,(hist_sums));
-        hold on
-        plot([1 1]*median_hist,[0 max(hist_sums)],'r','linewidth',2)
-        plot([1 1]*median_hist*fac_hit,[0 max(hist_sums)],'--r','linewidth',2)
-        xlim([0 2*median_hist*fac_hit]);
-        xlabel('sum')
-        title('histogram over sum of backround substracted images');
-    end
-end
+% if(~isempty(is_hit))
+%     if(plot_mode)
+%         subplot(2,2,2)
+%         hold off
+%         bar(sum_x_vec,(hist_sums));
+%         hold on
+%         plot([1 1]*median_hist,[0 max(hist_sums)],'r','linewidth',2)
+%         plot([1 1]*median_hist*fac_hit,[0 max(hist_sums)],'--r','linewidth',2)
+%         xlim([0 2*median_hist*fac_hit]);
+%         xlabel('sum')
+%         title('histogram over sum of backround substracted images');
+%     end
+% end
 end

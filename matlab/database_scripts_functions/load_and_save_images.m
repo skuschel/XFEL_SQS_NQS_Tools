@@ -10,17 +10,16 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[(412)'];
+runs_to_export=[415,416,417];
 all_runs_flag=0;
 %__________________________________________________________________________
 
 database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
-bg_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 image_save_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_hits/');
 
 db_runs=load([database_path 'db_runs.mat']);
 db_hits=load([database_path 'db_hits.mat']);
-db_bg=load([bg_path 'db_bg_runs.mat']);
+db_bg=load([database_path 'db_bg_runs.mat']);
 
 runs_all=db_get(db_hits,'run');
 runs_bg_all=db_get(db_runs,'run_bg');
@@ -34,7 +33,6 @@ ind_export_hits=db_find(db_hits,'run',runs_to_export);
 ind_export_runs=db_find(db_runs,'run',runs_to_export);
 
 run_nrs=runs_all(ind_export_hits);
-bg_run_nrs=runs_bg_all(ind_export_runs);
 train_Ids=train_Ids_all(ind_export_hits);
 
 %%
