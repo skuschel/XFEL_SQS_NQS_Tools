@@ -1,5 +1,5 @@
-function out = pnccd_read_all(info, varargin)
-    files = get_files(info.path, 'PNCCD01');
+function out = pnccd_read_all(path, varargin)
+    files = get_files(path, 'PNCCD01');
 
     if nargin==1
         files_in =1:numel(files);
@@ -7,7 +7,7 @@ function out = pnccd_read_all(info, varargin)
         files_in = varargin{1};
     end
     
-    tid = pnccd_read_trainId(info);
+    tid = pnccd_read_trainId(path);
     
     out.trainId = [];
     

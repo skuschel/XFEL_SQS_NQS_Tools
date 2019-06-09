@@ -1,13 +1,13 @@
-function out = pnccd_read(info, varargin)
+function out = pnccd_read(path, varargin)
     tic;
     if nargin==1
-        out = pnccd_read_all(info);
+        out = pnccd_read_all(path);
     elseif nargin==3
         switch varargin{1}
             case 'files'
-                out = pnccd_read_all(info, varargin{2}); 
+                out = pnccd_read_all(path, varargin{2}); 
             case 'trainId'
-                out = pnccd_read_single(info, varargin{2});    
+                out = pnccd_read_single(path, varargin{2});    
             otherwise
             out = [];
         end

@@ -1,5 +1,5 @@
-function out = read_tof(info)
-    files = get_files(info.path, 'DA02');
+function out = read_tof(path)
+    files = get_files(path, 'DA02');
         
     out.data = [];
     out.trainId = [];

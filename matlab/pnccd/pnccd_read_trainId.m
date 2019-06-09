@@ -1,5 +1,5 @@
-function out = pnccd_read_trainIds(info)
-    files = get_files(info.path, 'PNCCD01');
+function out = pnccd_read_trainIds(path)
+    files = get_files(path, 'PNCCD01');
 
     out.trainId = [];
     out.fileNr = [];

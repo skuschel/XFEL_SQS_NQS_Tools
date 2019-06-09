@@ -1,6 +1,6 @@
-function out = pnccd_read_single(info, trainId)
+function out = pnccd_read_single(path, trainId)
     tic;
-    out = pnccd_read_trainId(info);
+    out = pnccd_read_trainId(path);
     toc;
     
     trainId_list = out.trainId;
@@ -12,7 +12,7 @@ function out = pnccd_read_single(info, trainId)
     disp(idx);
     
 
-    files = get_files(info.path, 'PNCCD01');
+    files = get_files(path, 'PNCCD01');
 
 
     i = fileNr_list(idx);
