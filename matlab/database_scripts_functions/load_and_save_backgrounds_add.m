@@ -18,8 +18,8 @@ for background_run_nr=runs_to_export.'
     if(sum(db_bg.run==background_run_nr)==0)
         k=k+1;
         
-        info.path=get_path(201802, 002195, 'raw', background_run_nr);
-        pnccd_background=pnccd_read(info);
+        path=get_path(201802, 002195, 'raw', background_run_nr);
+        pnccd_background=pnccd_read(path);
         background_images=pnccd_background.data;
         
         background_mean=mean(background_images,3);

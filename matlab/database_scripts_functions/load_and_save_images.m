@@ -10,7 +10,7 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[429];
+runs_to_export=[259,260,255,257];
 all_runs_flag=0;
 %__________________________________________________________________________
 
@@ -47,8 +47,8 @@ for u=1:numel(train_Ids)
     curr_bg_run=db_get(db_runs,'run_bg',db_find(db_runs,'run',run_nrs(u)));
     
     if(curr_bg_run>0)
-        info.path=get_path(201802, 002195, 'raw',  run_nrs(u));
-        pnccd=pnccd_read(info,'trainId',train_Ids(u));
+        path=get_path(201802, 002195, 'raw',  run_nrs(u));
+        pnccd=pnccd_read(path,'trainId',train_Ids(u));
         bg_index=find(db_bg.run==curr_bg_run);
         bg_now=db_bg.mean(:,:,bg_index);
         image_now=pnccd.data-bg_now;

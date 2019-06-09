@@ -1,7 +1,7 @@
-clc
+% gives the ring spacing distribution of the specified run list
+clc;
+clear;
 
-% run_nr_list=[280,281];
-% background_run_nr=278;
 run_nr_list=[342,343];
 background_run_nr=341;
 
@@ -40,8 +40,8 @@ for run_nr=run_nr_list
     for u=1:numel(hit_list)
         k=k+1;
         
-        info.path=get_path(201802, 002195, 'raw', run_nr);
-        pnccd=pnccd_read(info,'trainId',hit_list(u));
+        path=get_path(201802, 002195, 'raw', run_nr);
+        pnccd=pnccd_read(path,'trainId',hit_list(u));
         
         img_to_analyze=cast(pnccd.data,'double')-background_mean;
         [radiusAxis,radiusInt] = get_radial_integral(img_to_analyze,mask,0,center,nrad);
