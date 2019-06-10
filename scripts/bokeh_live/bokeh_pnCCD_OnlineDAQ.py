@@ -246,32 +246,50 @@ def makeBigData():
             #~ t4 = time.time()
             ## PNCCD
             if pnCCD_in_stream:
-                pnCCD_single_full_bg_cor = np.squeeze(data['pnCCD'])
+                pnCCD_single_full_bg_cor = np.squeeze(data['pnCCD']) #make sure that we have a 2d array\
+                #here we prepare a copy of the pnccd data for displaying
                 pnCCD_single_full = pnCCD_single_full_bg_cor.copy()
-                pnCCD_single_full[pnCCD_single_full<1] = 1
-                
+                pnCCD_single_full[pnCCD_single_full<1] = 1                
                 pnCCD_single = pnCCD_single_full
+                
                 #~ t3 = time.time()
+                # calculate integrals relevant for hitfinding and buffer plotting
                 if not get_background_max_pnCCD:
+                    # this is done when no max pnccd background is used
+                    # just an integral over the cropped pnccd image
                     pnCCD_integral = np.sum(data['pnCCD'])
-                pnCCD_integral_hit_find = np.sum(data['pnCCD_hit_find'])
-                _SQSbuffer__pnCCD_integral(pnCCD_integral_hit_find)
-                if height_tof>tof_height_hit_threshold or integral_tof>tof_integral_hit_threshold:
-                    hit_found = True
-                    last_hit_pnCCD = pnCCD_single_full
-                    last_hit_TOF = data['tof']
-                    _SQSbuffer__TOF_hits__last_hit(np.squeeze(last_hit_TOF))
-                    _SQSbuffer__pnCCD_hits__last_hit(np.squeeze(data['pnCCD_full']))
-                    _SQSbuffer__trainId__last_hit(data['tid'])
-                    _SQSbuffer__pnCCD_hitrate_helper(1)
+                    # fill integral value into buffer
+                    _SQSbuffer__pnCCD_integral(pnCCD_integral)
                 else:
-                    _SQSbuffer__pnCCD_hitrate_helper(0)
+                    # this is done when a mac pnccd background is used
+                    # take a sum over a special prepared pnccd img for hit finding
+                    pnCCD_integral_hit_find = np.sum(data['pnCCD_hit_find'])
+                    # fill integral value into buffer
+                    _SQSbuffer__pnCCD_integral(pnCCD_integral_hit_find)
+                # Hit finder on TOF height and integral using thresholds defined at beginning of file
+                if height_tof>tof_height_hit_threshold or integral_tof>tof_integral_hit_threshold:
+                    hit_found = True # let further code know that a hit has been found, will be set to false once plotting and further processing has been completed
+                    last_hit_pnCCD = pnCCD_single_full # last hit pnccd data for plotting
+                    last_hit_TOF = data['tof'] # last hit tof data for plotting
+                    _SQSbuffer__TOF_hits__last_hit(np.squeeze(last_hit_TOF)) # last hit tof data for emergency saving
+                    _SQSbuffer__pnCCD_hits__last_hit(np.squeeze(data['pnCCD_full'])) # last hit pnccd data for emergency saving
+                    _SQSbuffer__trainId__last_hit(data['tid']) # last tof hit train id buffer
+                    _SQSbuffer__pnCCD_hitrate_helper(1) # helper buffer for hitrate calculation 1 = hit, 0 = no hit
+                else:
+                    _SQSbuffer__pnCCD_hitrate_helper(0) # helper buffer for hitrate calculation 1 = hit, 0 = no hit
+                    
                 #~ t4 = time.time()
+                # calculate TOF hitrate
                 _SQSbuffer__pnCCD_hitrate(np.mean(_SQSbuffer__pnCCD_hitrate_helper)*100)
+                
+                
+                # Choose integral value used for pnccd hit finding based on which background has been provided
                 if not get_background_max_pnCCD:
                     pnCCD_hitfinder_val = pnCCD_integral
                 else:
                     pnCCD_hitfinder_val = pnCCD_integral_hit_find
+                # PNCCD Hit finder
+                # hit finder on integral only and combination of tof height and pnccd integral
                 if pnCCD_hitfinder_val > pnCCD_integral_hit_threshold or ( pnCCD_hitfinder_val > pnCCD_integral_combines_hit_threshold and height_tof>tof_height_combines_hit_threshold ):
                     hit_img_full = np.squeeze(np.asarray(pnCCD_single_full))
                     hit_img_full[hit_img_full<0]=0
@@ -286,13 +304,16 @@ def makeBigData():
                     _SQSbuffer__trainId__pnccdDetect__last_hit(data['tid'])
                 else:
                     _SQSbuffer__pnCCD_hitrate_helper_2(0)
+                # Calculate PNCCD Hitrate
                 _SQSbuffer__pnCCD_hitrate_2(np.mean(_SQSbuffer__pnCCD_hitrate_helper_2)*100)
                 #~ t5 = time.time()
+            # buffer with recent iteration index n, used as x axis for some plots
             _SQSbuffer__counter(n)
-            ## TrainId
+            # Get TrainId
             trainId = str(data['tid'])
-            # Things for add next tick callback
             #~ t6 = time.time()
+            
+            # Things for add next tick callback --> Displaying
             if n%oa_disp_mod==0: # skip plotting 
                 # prep some data for plotting
                 #pnccd_dist_px, pnccd_rightLeft_offset_px

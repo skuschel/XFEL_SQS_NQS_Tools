@@ -48,7 +48,7 @@ def servedata(host, type='REQ'):
 #@gp.pipeline_parallel()  #does not work due to pickling error of the undecorated function
 def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'], baselineTo=defaultConf['tofBaseEnd']):
     data = d['data']
-    meta = d['meta']
+    #~ meta = d['meta']
     if True:#tofDev in data:
         tofraw = data[tofDev]['digitizers.channel_1_A.raw.samples']
     else:
@@ -64,8 +64,9 @@ def _getTof(d, idx_range=defaultConf['tofRange'], tofDev=defaultConf['tofDevice'
 
     #subtract channel offsets
     #subtract a baseline if we are using one
-    nChan = defaultConf['tofChannels']
+    
     if baselineTo > 0:
+        nChan = defaultConf['tofChannels']
         for c in range(nChan):
             tofcut[c::nChan] = tofcut[c::nChan] - np.mean(tofcut[c:baselineTo:nChan])
         
