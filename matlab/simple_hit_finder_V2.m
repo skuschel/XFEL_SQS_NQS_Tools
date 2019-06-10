@@ -7,6 +7,7 @@ database_path=sprintf('/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/');
 db_runs=load([database_path 'db_runs.mat']);
 db_bg=load([database_path 'db_bg_runs.mat']);
 db_hits=load([database_path 'db_hits.mat']);
+
 %__________________________________________________________________________
 %for plotting the image
 gap_size=4.3; %mm
@@ -15,9 +16,9 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_dark_nr=    475;
-run_bg_nr=      476;
-run_nr=         479;
+run_dark_nr=    484;
+run_bg_nr=      485;
+run_nr=         486;
 
 save_db_flag=   1;   %save trainIds of hits ?
 save_mat_flag=  1;   %save the images as .mat ?
@@ -26,14 +27,15 @@ plot_flag=      1;
 %settings for hit finding
 % fac_hit=2.7;    %for runs before run 187
 % fac_hit=1.7;
-fac_hit=1.4;
-num_bins=100000;      %number of bins for hit finding histogram
+straylight_area=6e5;    %specify maximum of straylight peak (to find mean of distribution in hit finding)
+fac_hit=2.3;
+num_bins=50;         %number of bins for hit finding histogram in the straylight peak
 mip_th=100;          %MIP finder threshold
 nbins_MIP=2000;
 %__________________________________________________________________________
 path=get_path(201802, 002195, 'raw', run_nr);
-pnccd=pnccd_read(path);
-% pnccd=pnccd_read(path,'files',1:7);
+% pnccd=pnccd_read(path);
+pnccd=pnccd_read(path,'files',1:15);
 % tof=read_tof(path);
 
 %background
@@ -41,15 +43,13 @@ pnccd=pnccd_read(path);
 bg_index=find(db_bg.run==run_bg_nr);
 
 fprintf('analyzing %d images... \n',pnccd.num_images);
-
-num_bins=num_bins*pnccd.num_images/12e3;
 %% subtract the background
 background_mean=db_bg.mean(:,:,bg_index);
 background_max=db_bg.max(:,:,bg_index);
 pnccd_images_backsub=pnccd.data-repmat(background_max,1,1,pnccd.num_images);
 %% finding hits
 figure(1)
-[is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,1);
+[is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,1,straylight_area);
 
 % finding MIPs
 MIPs_found=0;
