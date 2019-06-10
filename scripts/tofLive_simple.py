@@ -8,7 +8,7 @@ import sqs_nqs_tools as tools
 import pyqtgraph as pg
 
 # Parameters may to be changed by User
-tof_range = [0,1200000]
+tof_range = [0,200000]
 
 # Main Program
 def main(source):

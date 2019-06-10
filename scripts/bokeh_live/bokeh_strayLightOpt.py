@@ -46,19 +46,19 @@ gmd_in_stream = True
 two_monitors = False
 
 img_downscale = 30
-colormap_pnCCD = 'Plasma'
-colormap_pnCCD = process_cmap('rainbow',provider='colorcet')
+#~ colormap_pnCCD = 'Plasma'
+#~ colormap_pnCCD = process_cmap('rainbow',provider='colorcet')
 colormap_pnCCD = process_cmap('jet',provider='matplotlib')
-pnCCD_color_lower_z_lim = 0.02
-pnCCD_color_upper_z_lim = 5
-pnCCDavg_color_lower_z_lim = 0.005
-pnCCDavg_color_upper_z_lim = 2
+pnCCD_color_lower_z_lim = 0.02 #0.02
+pnCCD_color_upper_z_lim = 16 #5
+pnCCDavg_color_lower_z_lim = 0.005 #0.005
+pnCCDavg_color_upper_z_lim = 16 #2
 
 makeBigData_stop = False
 # DATA CONFIG
 N_datapts = 31000 # total number of TOF datapoints that are visualized
 start_tof = 59000 # index of first TOF datapoint considered
-single_photon_adu = 1000
+single_photon_adu = 250
 background_pnCCD = np.zeros(shape=(1024,1024))
 background_max_pnCCD = np.zeros(shape=(1024,1024))
 dark_pnCCD = np.zeros(shape=(1024,1024))
@@ -165,12 +165,20 @@ def makeBigData():
                 pnCCD_mean_2 = np.mean(_SQSbuffer__pnCCD_mean_helper_2,axis=0) # current average 2
                 pnCCD_integral_single =  np.sum(pnCCD_single) # integral single shot
                 pnCCD_integral_mean =  np.sum(pnCCD_mean_1) # integral current average 1
+                pnCCD_integral_mean_left = np.sum(pnCCD_mean_1[483:541,0:500])
+                pnCCD_integral_mean_right = np.sum(pnCCD_mean_1[483:541,524:1023])
+                pnCCD_integral_mean_bottom = np.sum(pnCCD_mean_1[524:1023,483:541])
+                pnCCD_integral_mean_top = np.sum(pnCCD_mean_1[0:500,483:541])
                 pnCCD_integral_mean_2 =  np.sum(pnCCD_mean_2) # integral current average 2
           
                 _SQSbuffer__pnCCD_mean_1_integral(pnCCD_integral_mean)
                 _SQSbuffer__pnCCD_mean_2_integral(pnCCD_integral_mean_2)
                 _SQSbuffer__pnCCD_integral(pnCCD_integral_single)
                 _SQSbuffer__pnCCD_mean_1_integral_proc(pnCCD_integral_mean/xgm_mean_1)
+                _SQSbuffer__pnCCD_mean_1_integral_proc_top(pnCCD_integral_mean_top/xgm_mean_1)
+                _SQSbuffer__pnCCD_mean_1_integral_proc_bottom(pnCCD_integral_mean_bottom/xgm_mean_1)
+                _SQSbuffer__pnCCD_mean_1_integral_proc_right(pnCCD_integral_mean_right/xgm_mean_1)
+                _SQSbuffer__pnCCD_mean_1_integral_proc_left(pnCCD_integral_mean_left/xgm_mean_1)
                 _SQSbuffer__pnCCD_mean_2_integral_proc(pnCCD_integral_mean_2/xgm_mean_2)
                 _SQSbuffer__pnCCD_integral_proc(pnCCD_integral_single/xgm_single)
                               
@@ -180,7 +188,7 @@ def makeBigData():
             ## TrainId
             trainId = str(data['tid'])
             # Things for add next tick callback
-            if n%5==0: # skip plotting 
+            if n%7==0: # skip plotting 
                 # prepare for display
                 pnCCD_single_display = pnCCD_single.copy()  # prepared single shot for display
                 pnCCD_single_display[pnCCD_single_display<0.1] = 0.1  # prepared single shot for log scale
@@ -198,6 +206,10 @@ def makeBigData():
                     callback_data_dict["pnCCD_single_tid"] = (trainId)
                     callback_data_dict["pnCCD_integral"] = (_SQSbuffer__counter_time.data - now , _SQSbuffer__pnCCD_integral.data)
                     callback_data_dict["pnCCD_mean_1_integral"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral.data)
+                    callback_data_dict["pnCCD_mean_1_integral_proc_top"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral_proc_top.data)
+                    callback_data_dict["pnCCD_mean_1_integral_proc_bottom"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral_proc_bottom.data)
+                    callback_data_dict["pnCCD_mean_1_integral_proc_right"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral_proc_right.data)
+                    callback_data_dict["pnCCD_mean_1_integral_proc_left"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral_proc_left.data)
                     callback_data_dict["pnCCD_mean_2_integral"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_2_integral.data)
                     callback_data_dict["pnCCD_integral_proc"] = (_SQSbuffer__counter_time.data - now , _SQSbuffer__pnCCD_integral_proc.data )
                     callback_data_dict["pnCCD_mean_1_integral_proc"] = (_SQSbuffer__counter_time.data - now, _SQSbuffer__pnCCD_mean_1_integral_proc.data )
@@ -222,6 +234,10 @@ def makeBigData():
                     buffer_or_pipe_dict["pnCCD_mean_2_integral"] = _pipe__pnCCD_mean_2_integral
                     buffer_or_pipe_dict["pnCCD_integral_proc"] = _pipe__pnCCD_integral_by_gmd
                     buffer_or_pipe_dict["pnCCD_mean_1_integral_proc"] = _pipe__pnCCD_mean_1_integral_by_gmd
+                    buffer_or_pipe_dict["pnCCD_mean_1_integral_proc_right"] = _pipe__pnCCD_mean_1_integral_by_gmd_right
+                    buffer_or_pipe_dict["pnCCD_mean_1_integral_proc_left"] = _pipe__pnCCD_mean_1_integral_by_gmd_left
+                    buffer_or_pipe_dict["pnCCD_mean_1_integral_proc_top"] = _pipe__pnCCD_mean_1_integral_by_gmd_top
+                    buffer_or_pipe_dict["pnCCD_mean_1_integral_proc_bottom"] = _pipe__pnCCD_mean_1_integral_by_gmd_bottom
                     buffer_or_pipe_dict["pnCCD_mean_2_integral_proc"] = _pipe__pnCCD_mean_2_integral_by_gmd
                     if False:
                         hit_found = False
@@ -365,6 +381,10 @@ _SQSbuffer__pnCCD_mean_1_integral = online.DataBuffer(buffer_length)
 _SQSbuffer__pnCCD_mean_2_integral = online.DataBuffer(buffer_length)
 _SQSbuffer__pnCCD_integral_proc = online.DataBuffer(buffer_length)
 _SQSbuffer__pnCCD_mean_1_integral_proc = online.DataBuffer(buffer_length)
+_SQSbuffer__pnCCD_mean_1_integral_proc_top = online.DataBuffer(buffer_length)
+_SQSbuffer__pnCCD_mean_1_integral_proc_bottom = online.DataBuffer(buffer_length)
+_SQSbuffer__pnCCD_mean_1_integral_proc_right = online.DataBuffer(buffer_length)
+_SQSbuffer__pnCCD_mean_1_integral_proc_left = online.DataBuffer(buffer_length)
 _SQSbuffer__pnCCD_mean_2_integral_proc = online.DataBuffer(buffer_length)
 _SQSbuffer__pnCCD_mean_helper_1 = online.DataBuffer(mean_1_length)
 _SQSbuffer__pnCCD_mean_helper_2 = online.DataBuffer(mean_2_length)
@@ -385,6 +405,10 @@ _pipe__pnCCD_mean_1_integral = Pipe(data=[])
 _pipe__pnCCD_mean_2_integral = Pipe(data=[])
 _pipe__pnCCD_integral_by_gmd = Pipe(data=[])
 _pipe__pnCCD_mean_1_integral_by_gmd = Pipe(data=[])
+_pipe__pnCCD_mean_1_integral_by_gmd_top = Pipe(data=[])
+_pipe__pnCCD_mean_1_integral_by_gmd_bottom = Pipe(data=[])
+_pipe__pnCCD_mean_1_integral_by_gmd_right = Pipe(data=[])
+_pipe__pnCCD_mean_1_integral_by_gmd_left = Pipe(data=[])
 _pipe__pnCCD_mean_2_integral_by_gmd = Pipe(data=[])
 _pipe__GMD_history = Pipe(data=[])
 _pipe__pnCCD_hits__last_hit = Pipe(data=[])
@@ -402,8 +426,7 @@ bokeh_mean_1_pnCCD =  hv_to_bokeh_obj( pnCCDData_plot(_pipe__pnCCD_mean_1, title
 bokeh_mean_2_pnCCD_hv = pnCCDData_plot(_pipe__pnCCD_mean_2, title="pnCCD single shots - rolling AVG 2 - length "+str(mean_2_length), width = 600, height =500,zlim=(pnCCDavg_color_lower_z_lim,pnCCDavg_color_upper_z_lim), logz = True)
 bokeh_mean_2_pnCCD =  hv_to_bokeh_obj( bokeh_mean_2_pnCCD_hv )
 
-bokeh_mean_2test_pnCCD_hv = pnCCDData_plot__2(_pipe__pnCCD_mean_2, title="pnCCD single shots - rolling AVG 2 - length "+str(mean_2_length), width = 600, height =500,zlim=(1,None), logz = True)
-bokeh_mean_2test_pnCCD =  hv_to_bokeh_obj( bokeh_mean_2_pnCCD_hv )
+bokeh_mean_1_pnCCD__duplicate = hv_to_bokeh_obj( pnCCDData_plot(_pipe__pnCCD_mean_1, title="pnCCD single shots - rolling AVG 1 - length "+str(mean_1_length), width = 900, height =750,zlim=(pnCCDavg_color_lower_z_lim,pnCCDavg_color_upper_z_lim), logz = True) )
 
 bokeh_buffer_pnCCD_integral = smallData_line_plot(_pipe__pnCCD_integral, title="pnCCD single shots integral", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
 bokeh_buffer_pnCCD_mean_1_integral = smallData_line_plot(_pipe__pnCCD_mean_1_integral, title="pnCCD avg 1 integral", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
@@ -413,6 +436,12 @@ bokeh_buffer_pnCCD_integral_proc = smallData_line_plot(_pipe__pnCCD_integral_by_
 bokeh_buffer_pnCCD_mean_1_integral_proc = smallData_line_plot(_pipe__pnCCD_mean_1_integral_by_gmd, title="pnCCD avg 1 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
 bokeh_buffer_pnCCD_mean_2_integral_proc = smallData_line_plot(_pipe__pnCCD_mean_2_integral_by_gmd, title="pnCCD avg 2 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
 
+bokeh_buffer_pnCCD_mean_1_integral_proc_top = smallData_line_plot(_pipe__pnCCD_mean_1_integral_by_gmd_top, title="TOP -- pnCCD avg 1 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
+bokeh_buffer_pnCCD_mean_1_integral_proc_bottom = smallData_line_plot(_pipe__pnCCD_mean_1_integral_by_gmd_bottom, title="BOTTOM -- pnCCD avg 1 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
+bokeh_buffer_pnCCD_mean_1_integral_proc_right = smallData_line_plot(_pipe__pnCCD_mean_1_integral_by_gmd_right, title="RIGHT -- pnCCD avg 1 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
+bokeh_buffer_pnCCD_mean_1_integral_proc_left = smallData_line_plot(_pipe__pnCCD_mean_1_integral_by_gmd_left, title="LEFT -- pnCCD avg 1 integral / XGM", xlim=(None,None), ylim=(None, None), width = 600, height = 250, xlabel='Time (now = 0) in s')
+
+
 ## GMD
 bokeh_buffer_gmd = smallData_line_plot(_pipe__GMD_history, title="GMD History", xlim=(None,None), ylim=(None, None), width = 500, height =250)
 
@@ -421,6 +450,8 @@ bokeh_last_hit_trainid_label = Div(text='<p><span style="font-size:20pt">#######
 bokeh_pnccd_live_trainid_label = Div(text='<p><span style="font-size:20pt">#############<span></p>', width = 600, height = 50)
 bokeh_daq_frequency_label = Div(text='<p><span style="font-size:20pt">Analysis Frequency: <span></p>', width = 600, height = 50)
 bokeh_buffer_last_hit_trainids = Div(text='<p><span style="font-size:20pt">#############<br><br>#############<br><br>#############<br><br>#############<br><br>#############<br><br><span></p>', width = 200, height = 400)
+bokeh_spacer_height_250 = Div(text=' ', width = 50, height = 250)
+bokeh_spacer_width_600 = Div(text=' ', width = 600, height = 50)
 print("...3")
 
 ## SET UP UI Interaction
@@ -434,11 +465,12 @@ bokeh_button_test.on_click(testButtonCallback)
 # SET UP BOKEH LAYOUT
 #
 bokeh_row_0 = row(bokeh_pnccd_live_trainid_label , bokeh_daq_frequency_label)
-bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_mean_1_pnCCD,bokeh_mean_2_pnCCD,bokeh_mean_2test_pnCCD)
+bokeh_row_1 = row(bokeh_live_pnCCD,bokeh_mean_1_pnCCD,bokeh_mean_2_pnCCD)
 bokeh_row_2 = row(bokeh_buffer_pnCCD_integral,bokeh_buffer_pnCCD_mean_1_integral,bokeh_buffer_pnCCD_mean_2_integral, bokeh_buffer_gmd)
-bokeh_row_3 = row(bokeh_buffer_pnCCD_integral_proc,bokeh_buffer_pnCCD_mean_1_integral_proc,bokeh_buffer_pnCCD_mean_2_integral_proc)#bokeh_button_test)
+bokeh_row_3 = row(bokeh_buffer_pnCCD_integral_proc,bokeh_spacer_width_600,bokeh_buffer_pnCCD_mean_2_integral_proc)#bokeh_button_test)
+bokeh_row_4 = row(column(bokeh_spacer_height_250,bokeh_buffer_pnCCD_mean_1_integral_proc_left),column(bokeh_buffer_pnCCD_mean_1_integral_proc_top,bokeh_buffer_pnCCD_mean_1_integral_proc,bokeh_buffer_pnCCD_mean_1_integral_proc_bottom),column(bokeh_spacer_height_250,bokeh_buffer_pnCCD_mean_1_integral_proc_right), bokeh_mean_1_pnCCD__duplicate)
 
-bokeh_layout = column(bokeh_row_0,bokeh_row_1, bokeh_row_2, bokeh_row_3)
+bokeh_layout = column(bokeh_row_0,bokeh_row_1, bokeh_row_2, bokeh_row_3,bokeh_row_4)
 print("...4")
 # add bokeh layout to current doc
 doc.add_root(bokeh_layout)

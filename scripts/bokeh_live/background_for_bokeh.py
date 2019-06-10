@@ -18,10 +18,10 @@ def print_stats(arr):
     print(np.mean(np.asarray(arr)))
     print('---')
 
-for_sean = False
+for_sean = True
 dark_only = False
-run_bg = 368
-run_dark = 365
+run_bg = 485
+run_dark = 484
 raw_path ='/gpfs/exfel/exp/SQS/201802/p002195/raw'
 outpath_sean = '/gpfs/exfel/exp/SQS/201802/p002195/usr/Shared/images_for_recreation/'
 if not dark_only:
@@ -50,14 +50,14 @@ if not dark_only:
             #~ pnCCDdata_p[i,:,:] = pnCCDdata_p[i,:,:] - cm_mode_cor
     pnCCDmax =  np.max(pnCCDdata_p,axis=0)
     pnCCDavg = np.mean(pnCCDdata.sel(trainId=slice(10,1e10)),axis=0)-dark_avg
-    print_stats(np.mean(pnCCDdata.sel(trainId=slice(10,1e10)),axis=0))
+    #~ print_stats(np.mean(pnCCDdata.sel(trainId=slice(10,1e10)),axis=0))
 else:
     pnCCDavg = np.mean(pnCCDdata_dark,axis=0)
 pnCCDavg = np.squeeze(pnCCDavg)
 
-print_stats(np.mean(pnCCDdata_dark.sel(trainId=slice(10,1e10)),axis=0))
-print_stats(pnCCDavg)
-print_stats(pnCCDmax)
+#~ print_stats(np.mean(pnCCDdata_dark.sel(trainId=slice(10,1e10)),axis=0))
+#~ print_stats(pnCCDavg)
+#~ print_stats(pnCCDmax)
 #~ pnCCDavg = np.mean(pnCCDdata_dark.sel(trainId=slice(10,1e10)),axis=0)
 if for_sean:
     fname = "background_for_substraction_r"+str(run_bg)+"_darkR"+str(run_dark)+".dat"
@@ -68,3 +68,5 @@ else:
         np.save('background_max_pnCCD.npy',pnCCDmax)
     else:
         np.save('dark_pnCCD.npy',pnCCDavg)
+        
+print("DONE")

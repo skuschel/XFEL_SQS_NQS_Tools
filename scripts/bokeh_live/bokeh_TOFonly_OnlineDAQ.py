@@ -40,7 +40,7 @@ tof_in_stream = True
 pnCCD_in_stream = True
 gmd_in_stream = False
 tof_area_integrals = True
-use_tof_cal_axis = True
+use_tof_cal_axis = False
 
 img_downscale = 15
 
@@ -151,7 +151,7 @@ def makeDatastreamPipeline(source):
     ds = online.servedata(source) #get the datastream
     ds = online.getTof(ds,idx_range=[start_tof,end_tof]) #get the tofs
     ds = processTofs(ds) #treat the tofs
-    ds = online.getSomeDetector(ds, name='tid', spec0='SQS_DIGITIZER_UTC1/ADC/1:network', spec1='digitizers.trainId') #get current trainids from digitizer property
+    ds = online.getSomeDetector(ds, name='tid', spec0=defaultConf['tofDevice'], spec1='digitizers.trainId') #get current trainids from digitizer property
     #ds = online.getSomeDetector(ds, name='tid', spec0='SA3_XTD10_XGM/XGM/DOOCS:output', spec1='timestamp.tid', readFromMeta=True) #get current trainids from gmd property
     #if pnCCD_in_stream:
         #ds = online.getSomePnCCD(ds, name='pnCCD', spec0='SQS_NQS_PNCCD1MP/CAL/CORR_CM:output', spec1='data.image') #get pnCCD
@@ -187,7 +187,7 @@ def makeBigData():
                 _SQSbuffer__TOF_avg(data['tof'])
                 avg_tof = np.squeeze(np.mean(_SQSbuffer__TOF_avg.data, axis=0)) 
                 if tof_area_integrals:
-                    #tof_data_for_int = np.squeeze(data['tof'])
+                    #~ tof_data_for_int = np.squeeze(data['tof'])
                     tof_data_for_int = np.squeeze(avg_tof)
                     #~ print(tof_data_for_int.shape)
                     if True:
@@ -322,7 +322,7 @@ def start_stop_dataThread():
 
 # Data buffers for live stream
 
-buffer_len = 600
+buffer_len = 1500
 _SQSbuffer__TOF_integral = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_integral_1 = online.DataBuffer(buffer_len)
 _SQSbuffer__TOF_integral_2 = online.DataBuffer(buffer_len)
