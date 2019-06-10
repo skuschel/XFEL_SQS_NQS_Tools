@@ -1,4 +1,4 @@
-function [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,plot_mode)
+function [is_hit,weakest_hit,strongest_non_hit] = find_hit_hist(pnccd_images_backsub,fac_hit,num_bins,plot_mode,max_straylight)
 %takes a histogram of the sums of the background substracted images. Then
 %classifies everything as a hit which is larger than fac_hit*median.
 sums=squeeze(sum(sum(pnccd_images_backsub,1),2));
@@ -6,14 +6,16 @@ sums=squeeze(sum(sum(pnccd_images_backsub,1),2));
 % lit_pix_th=5e2;
 % sums=squeeze(sum(sum(pnccd_images_backsub>lit_pix_th,1),2));
 
-sum_x_vec=linspace(min(sums),max(sums),num_bins);
+dx=(max_straylight-min(sums))/num_bins;
+sum_x_vec=min(sums):dx:max(sums);
 hist_sums=hist(sums,sum_x_vec);
 hist_sums(1)=0;
-median_hist=sum(hist_sums.*sum_x_vec)/sum(hist_sums);
+area_ind_stray=1:(num_bins);
+median_hist=sum(hist_sums(area_ind_stray).*sum_x_vec(area_ind_stray))/sum(hist_sums(area_ind_stray));
 
 is_hit=find(sums>median_hist*fac_hit);
 if(~isempty(is_hit))
-    weakest_hit=find(min(sums(sums>median_hist*fac_hit))==sums);
+    weakest_hit=find(min(sums(is_hit))==sums);
     strongest_non_hit=find(max(sums(sums<median_hist*fac_hit)));
 else
     weakest_hit=0;
