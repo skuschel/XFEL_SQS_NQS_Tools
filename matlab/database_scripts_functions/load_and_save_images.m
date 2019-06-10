@@ -10,7 +10,7 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 gap_size=4;
 
-runs_to_export=[442];
+runs_to_export=[477,478];
 all_runs_flag=0;
 %__________________________________________________________________________
 
@@ -72,3 +72,5 @@ for u=1:numel(train_Ids)
         toc
     end
 end
+
+close(fig)

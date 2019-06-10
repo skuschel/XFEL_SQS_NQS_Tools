@@ -15,26 +15,25 @@ clim_lo=1e2;
 clim_hi=0.5e4;
 
 %run numbers
-run_dark_nr=    444;
-run_bg_nr=      445;
-run_nr=         447;
+run_dark_nr=    475;
+run_bg_nr=      476;
+run_nr=         479;
 
-
-save_db_flag=1;   %save trainIds of hits ?
-save_mat_flag=1;    %save the images as .mat ?
-plot_flag=1;
+save_db_flag=   1;   %save trainIds of hits ?
+save_mat_flag=  1;   %save the images as .mat ?
+plot_flag=      1;
 
 %settings for hit finding
 % fac_hit=2.7;    %for runs before run 187
 % fac_hit=1.7;
-fac_hit=1.5;
+fac_hit=1.4;
 num_bins=100000;      %number of bins for hit finding histogram
 mip_th=100;          %MIP finder threshold
 nbins_MIP=2000;
 %__________________________________________________________________________
 path=get_path(201802, 002195, 'raw', run_nr);
 pnccd=pnccd_read(path);
-% pnccd=pnccd_read(path,'files',1:6);
+% pnccd=pnccd_read(path,'files',1:7);
 % tof=read_tof(path);
 
 %background
@@ -119,7 +118,7 @@ if(plot_flag)
         
         %     colormap(jet(256))
         drawnow
-        %     pause(0.5)
+%             pause(0.5)
 %             end
     end
     subplot(1,2,1)

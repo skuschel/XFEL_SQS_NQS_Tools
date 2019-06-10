@@ -8,10 +8,10 @@ clim_lo=1e2;
 clim_hi=2e4;
 gap_size=4;
 
-center.x=514;
-center.y=534;
+center.x=512;
+center.y=535;
    
-trainId_to_plot=136999946;
+trainId_to_plot=137088500;
 
 %__________________________________________________________________________
 %load databases
@@ -55,7 +55,7 @@ y=(1:1024);
 [X,Y]=meshgrid(x-512,y-512);
 phi=atan2(Y,X);
 mask(abs(phi)<pi-full_opening_angle/2*pi/180)=0;
-nrad=400;
+nrad=1000;
 
 [radiusAxis,radiusInt] = get_radial_integral(image_now,mask,0,center,nrad);
 
