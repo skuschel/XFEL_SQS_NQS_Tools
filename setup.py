@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Stephan Kuschel, 2019
+# Stephan Kuschel, Bjoern Senfftleben 2019
 
 from setuptools import setup
 import os
@@ -13,11 +13,11 @@ scripts = [f for f in scripts if osp.isfile(f)]
 print('Found the following scripts: {}'.format(scripts))
 
 
-setup(name='xfelmay2019',
+setup(name='sqs_nqs_tools',
       version=versioneer.get_version(),
       cmdclass=versioneer.get_cmdclass(),
       include_package_data=True,
       scripts=scripts,
-      url='https://github.com/skuschel/XFELMay2019',
+      url='https://git.xfel.eu/gitlab/SQS/XFEL_SQS_NQS_Tools/',
       install_requires=['numpy>1.8'])
       

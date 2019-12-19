@@ -1,0 +1,11 @@
+{
+  "exp_dir": "/gpfs/exfel/exp/SQS/201802/p002195/",
+  "devices": {
+    "mcp": "SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput",
+    "pnCCD": "SQS_DPU_LIC/CAM/YAG_UPSTR:daqOutput",
+    "tof": {
+      "dir": "SQS_DIGITIZER_UTC1/ADC/1:network",
+      "elem": "digitizers.channel_1_A.raw.samples"
+    }
+  }
+}
